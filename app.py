@@ -15,69 +15,46 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 jobs = {}
 
-# ✅ FIX 1: Node path Linux ke liye fix (Railway Linux server hai)
-NODE_PATH = os.environ.get('NODE_PATH', 'node')
+# ✅ Node.js path for yt-dlp JS runtime (YouTube 1080p+ ke liye zaroori)
+NODE_PATH = r"C:\nvm4w\nodejs\node.exe"
 
-# Cookies file path
-COOKIES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
-
-
-def setup_cookies():
-    """
-    Railway par YOUTUBE_COOKIES env variable se cookies.txt file banao.
-    Railway Dashboard → Settings → Variables → Add Variable
-    Name:  YOUTUBE_COOKIES
-    Value: (cookies.txt ka poora content paste karo)
-    """
-    cookie_content = os.environ.get('YOUTUBE_COOKIES', '').strip()
-    if cookie_content:
-        try:
-            with open(COOKIES_FILE, 'w', encoding='utf-8') as f:
-                f.write(cookie_content)
-            print("[Cookies] cookies.txt successfully bana diya env variable se")
-        except Exception as e:
-            print(f"[Cookies] Error: {e}")
-    else:
-        print("[Cookies] YOUTUBE_COOKIES env variable nahi mila — bot detection ho sakti hai")
-
-
-setup_cookies()
-
-
-def get_cookies_opts():
-    if os.path.exists(COOKIES_FILE) and os.path.getsize(COOKIES_FILE) > 0:
-        return {'cookiefile': COOKIES_FILE}
-    return {}
-
-
-# ✅ FIX 2: Node dependency hatao info opts se
+# Fast fetch opts — video ke liye
 def make_info_opts():
-    opts = {
+    return {
         'quiet': True,
         'no_warnings': True,
         'skip_download': True,
         'simulate': True,
-        # Node wali extractor_args bilkul nahi
+        'extractor_args': {
+            'youtube': {
+                'js_runtimes': [f'node:{NODE_PATH}'],
+                'skip': ['hls', 'dash'],
+            }
+        },
     }
-    opts.update(get_cookies_opts())
-    return opts
 
-
-# ✅ FIX 3: YT_EXTRACTOR_ARGS se Node dependency hatao
-YT_EXTRACTOR_ARGS = {}
+# yt-dlp extractor args — download ke liye
+YT_EXTRACTOR_ARGS = {
+    'youtube': {
+        'js_runtimes': [f'node:{NODE_PATH}']
+    }
+}
 
 if not os.path.exists('downloads'):
     os.makedirs('downloads')
 
 
 def cleanup_old_jobs():
+    """Delete jobs older than 30 minutes and their folders"""
     while True:
         time.sleep(300)
         now = time.time()
         expired = []
+
         for jid in list(jobs.keys()):
             if now - jobs[jid].get('created_at', now) > 1800:
                 expired.append(jid)
+
         for jid in expired:
             try:
                 output_path = jobs[jid].get('output_path') or f'downloads/{jid}'
@@ -88,18 +65,13 @@ def cleanup_old_jobs():
                 pass
 
 
-threading.Thread(target=cleanup_old_jobs, daemon=True).start()
+cleanup_daemon = threading.Thread(target=cleanup_old_jobs, daemon=True)
+cleanup_daemon.start()
 
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    cookies_ok = os.path.exists(COOKIES_FILE) and os.path.getsize(COOKIES_FILE) > 0
-    return jsonify({
-        "status": "ok",
-        "version": "1.0",
-        "cookies_loaded": cookies_ok,
-        "python_ok": True,
-    })
+    return jsonify({"status": "ok", "version": "1.0"})
 
 
 @app.route('/')
@@ -107,7 +79,7 @@ def index():
     return send_from_directory('templates', 'index.html')
 
 
-# Thumbnail Proxy — YouTube CORS bypass
+# ✅ Thumbnail Proxy — YouTube CORS bypass karne ke liye
 @app.route('/api/thumb')
 def proxy_thumb():
     url = request.args.get('url', '')
@@ -153,12 +125,12 @@ def format_view_count(count):
     if count is None:
         return "0"
     count = int(count)
-    if count >= 1_000_000_000:
-        return f"{count/1_000_000_000:.1f}B".replace(".0B", "B")
-    if count >= 1_000_000:
-        return f"{count/1_000_000:.1f}M".replace(".0M", "M")
-    if count >= 1_000:
-        return f"{count/1_000:.1f}K".replace(".0K", "K")
+    if count >= 1000000000:
+        return f"{count / 1000000000:.1f}B".replace(".0", "")
+    if count >= 1000000:
+        return f"{count / 1000000:.1f}M".replace(".0", "")
+    if count >= 1000:
+        return f"{count / 1000:.1f}K".replace(".0", "")
     return str(count)
 
 
@@ -173,12 +145,12 @@ def format_filesize(size):
         return ""
     size_mb = size / (1024 * 1024)
     if size_mb >= 1024:
-        return f"~{size_mb/1024:.1f} GB"
+        return f"~{size_mb / 1024:.1f} GB"
     return f"~{size_mb:.0f} MB"
 
 
 def estimate_filesize(quality):
-    return {
+    estimates = {
         "8K":         "~3.0 GB",
         "4K":         "~800 MB",
         "2K":         "~400 MB",
@@ -187,7 +159,8 @@ def estimate_filesize(quality):
         "480p":       "~40 MB",
         "360p":       "~25 MB",
         "Audio Only": "~5 MB",
-    }.get(quality, "~50 MB")
+    }
+    return estimates.get(quality, "~50 MB")
 
 
 def get_format_list(formats):
@@ -204,7 +177,11 @@ def get_format_list(formats):
         360:  "360p",
     }
 
-    video_formats = [f for f in formats if f.get('vcodec') and f.get('vcodec') != 'none']
+    video_formats = [
+        fmt for fmt in formats
+        if fmt.get('vcodec') and fmt.get('vcodec') != 'none'
+    ]
+
     clean_formats = []
     seen_heights = set()
 
@@ -217,26 +194,28 @@ def get_format_list(formats):
             continue
         filesize = fmt.get('filesize') or fmt.get('filesize_approx')
         clean_formats.append({
-            "quality":   quality_label,
-            "height":    height,
+            "quality": quality_label,
+            "height": height,
             "format_id": fmt.get('format_id'),
-            "ext":       fmt.get('ext', 'mp4'),
-            "filesize":  format_filesize(filesize) if filesize else estimate_filesize(quality_label),
+            "ext": fmt.get('ext', 'mp4'),
+            "filesize": format_filesize(filesize) if filesize else estimate_filesize(quality_label),
         })
         seen_heights.add(height)
 
     audio_only = next(
-        (f for f in formats if f.get('vcodec') in (None, 'none') and f.get('acodec') and f.get('acodec') != 'none'),
+        (fmt for fmt in formats
+         if fmt.get('vcodec') in (None, 'none')
+         and fmt.get('acodec') and fmt.get('acodec') != 'none'),
         None
     )
     if audio_only:
         filesize = audio_only.get('filesize') or audio_only.get('filesize_approx')
         clean_formats.append({
-            "quality":   "Audio Only",
-            "height":    0,
+            "quality": "Audio Only",
+            "height": 0,
             "format_id": audio_only.get('format_id'),
-            "ext":       audio_only.get('ext', 'mp3'),
-            "filesize":  format_filesize(filesize) if filesize else "~5 MB",
+            "ext": audio_only.get('ext', 'mp3'),
+            "filesize": format_filesize(filesize) if filesize else "~5 MB",
         })
 
     quality_order = ["8K", "4K", "2K", "1080p", "720p", "480p", "360p", "Audio Only"]
@@ -247,7 +226,7 @@ def get_format_list(formats):
 def youtube_video_url(entry):
     if entry.get('webpage_url'):
         return entry.get('webpage_url')
-    if entry.get('url') and str(entry.get('url')).startswith('http'):
+    if entry.get('url') and entry.get('url').startswith('http'):
         return entry.get('url')
     if entry.get('id'):
         return f"https://www.youtube.com/watch?v={entry.get('id')}"
@@ -255,24 +234,18 @@ def youtube_video_url(entry):
 
 
 def yt_dlp_error_message(error):
-    msg = str(error).lower()
-    if "private" in msg:
+    message = str(error).lower()
+    if "private" in message:
         return "Yeh video private hai"
-    if "age" in msg or "confirm your age" in msg:
-        return "Age restricted video — cookies add karein"
-    if "not available" in msg or "unavailable" in msg or "removed" in msg:
-        return "Video available nahi hai apke region mein"
-    if "sign in" in msg or "bot" in msg or "login" in msg:
-        return "YouTube ne block kiya — YOUTUBE_COOKIES env variable mein cookies add karein"
-    if "network" in msg or "timed out" in msg or "connection" in msg:
-        return "Internet check karein ya thodi der baad try karein"
-    if "copyright" in msg:
-        return "Yeh video copyright ki wajah se download nahi ho sakti"
-    if "http error 429" in msg:
-        return "YouTube ne rate limit kar diya — kuch minutes baad try karein"
-    if "http error 403" in msg:
-        return "Access denied — cookies update karein"
-    return "Kuch masla hua: " + str(error)[:120]
+    if "age" in message or "sign in to confirm your age" in message:
+        return "Age restricted video — login required"
+    if "not available" in message or "unavailable" in message or "removed" in message:
+        return "Video available nahi hai"
+    if "invalid" in message or "url" in message:
+        return "Galat YouTube URL hai"
+    if "network" in message or "timed out" in message or "connection" in message or "temporary failure" in message:
+        return "Internet check karein"
+    return "Kuch masla hua: " + str(error)
 
 
 def clean_progress_text(value):
@@ -288,12 +261,13 @@ def format_eta(seconds):
         seconds = int(seconds)
     except (TypeError, ValueError):
         return ""
-    h = seconds // 3600
-    m = (seconds % 3600) // 60
-    s = seconds % 60
-    if h:
-        return f"{h}:{m:02d}:{s:02d}"
-    return f"{m}:{s:02d}"
+    minutes = seconds // 60
+    secs = seconds % 60
+    hours = minutes // 60
+    minutes = minutes % 60
+    if hours:
+        return f"{hours}:{minutes:02d}:{secs:02d}"
+    return f"{minutes}:{secs:02d}"
 
 
 def make_progress_hook(job_id):
@@ -302,38 +276,40 @@ def make_progress_hook(job_id):
         if not job:
             return
         if job.get('cancelled'):
-            raise Exception("Download cancelled by user")
+            raise Exception("Download cancelled")
 
         status = data.get('status')
         if status == 'downloading':
-            total_bytes     = data.get('total_bytes') or data.get('total_bytes_estimate') or 0
+            total_bytes = data.get('total_bytes') or data.get('total_bytes_estimate') or 0
             downloaded_bytes = data.get('downloaded_bytes') or 0
             percent = 0
 
             if total_bytes:
                 percent = round((downloaded_bytes / total_bytes) * 100, 1)
             elif data.get('_percent_str'):
+                percent_text = clean_progress_text(data.get('_percent_str')).replace('%', '')
                 try:
-                    percent = round(float(clean_progress_text(data['_percent_str']).replace('%', '')), 1)
+                    percent = round(float(percent_text), 1)
                 except ValueError:
                     percent = job.get('percent', 0)
 
             job.update({
-                'percent':          percent,
-                'speed':            clean_progress_text(data.get('_speed_str')),
-                'eta':              clean_progress_text(data.get('_eta_str')) or format_eta(data.get('eta')),
-                'current_file':     os.path.basename(data.get('filename') or ''),
-                'bytes_downloaded': downloaded_bytes,
-                'status':           'downloading',
-                'retrying':         False,
+                "percent": percent,
+                "speed": clean_progress_text(data.get('_speed_str')),
+                "eta": clean_progress_text(data.get('_eta_str')) or format_eta(data.get('eta')),
+                "current_file": os.path.basename(data.get('filename') or ""),
+                "bytes_downloaded": downloaded_bytes,
+                "status": "downloading",
+                "retrying": False,
             })
         elif status == 'finished':
             job.update({
-                'percent':          max(job.get('percent', 0), 100),
-                'current_file':     os.path.basename(data.get('filename') or job.get('current_file') or ''),
-                'bytes_downloaded': data.get('downloaded_bytes') or job.get('bytes_downloaded', 0),
-                'status':           'downloading',
+                "percent": max(job.get('percent', 0), 100),
+                "current_file": os.path.basename(data.get('filename') or job.get('current_file') or ""),
+                "bytes_downloaded": data.get('downloaded_bytes') or job.get('bytes_downloaded', 0),
+                "status": "downloading",
             })
+
     return progress_hook
 
 
@@ -341,8 +317,8 @@ def retry_sleep(job_id, attempt):
     job = jobs.get(job_id)
     if job:
         job['retry_count'] = attempt
-        job['retrying']    = True
-    return min(2 ** attempt, 30)
+        job['retrying'] = True
+    return min(2**attempt, 30)
 
 
 def build_ydl_opts(job_id, quality, fmt, output_path):
@@ -356,11 +332,12 @@ def build_ydl_opts(job_id, quality, fmt, output_path):
         "360p":  360,
     }
 
-    selected_quality  = quality or "720p"
-    requested_format  = str(fmt or "").lower()
-    is_audio_only     = (
+    selected_quality = quality or "720p"
+    requested_format = str(fmt or "").lower()
+
+    is_audio_only = (
         str(selected_quality).lower() in ("audio", "audio only", "mp3")
-        or requested_format in ("mp3", "m4a")
+        or requested_format in ("audio", "audio only", "mp3")
     )
 
     if is_audio_only:
@@ -370,38 +347,34 @@ def build_ydl_opts(job_id, quality, fmt, output_path):
         format_str = (
             f"bestvideo[height<={max_height}][ext=mp4]+bestaudio[ext=m4a]/"
             f"bestvideo[height<={max_height}]+bestaudio/"
-            f"best[height<={max_height}]/best"
+            f"best[height<={max_height}]/"
+            "best"
         )
 
-    merge_fmt = 'mp4'
-    if requested_format in ('mkv', 'webm'):
-        merge_fmt = requested_format
-
     opts = {
-        'continuedl':             True,
-        'retries':                10,
-        'fragment_retries':       10,
-        'file_access_retries':    5,
-        'socket_timeout':         30,
-        'retry_sleep_functions':  {'http': lambda n: retry_sleep(job_id, n)},
-        'outtmpl':                output_path + '/%(playlist_index)s-%(title)s.%(ext)s',
-        'quiet':                  True,
-        'no_warnings':            True,
-        'progress_hooks':         [make_progress_hook(job_id)],
-        'format':                 format_str,
-        'merge_output_format':    merge_fmt,
-        # ✅ FIX: No Node dependency
-        'extractor_args':         YT_EXTRACTOR_ARGS,
+        'continuedl': True,
+        'retries': 10,
+        'fragment_retries': 10,
+        'file_access_retries': 5,
+        'socket_timeout': 30,
+        'retry_sleep_functions': {'http': lambda n: retry_sleep(job_id, n)},
+        'outtmpl': output_path + '/%(playlist_index)s-%(title)s.%(ext)s',
+        'quiet': True,
+        'no_warnings': True,
+        'progress_hooks': [make_progress_hook(job_id)],
+        'format': format_str,
+        'merge_output_format': 'mp4' if requested_format == 'mp4' else requested_format,
+        'extractor_args': YT_EXTRACTOR_ARGS,
     }
 
-    opts.update(get_cookies_opts())
-
     if is_audio_only:
-        opts['postprocessors'] = [{
-            'key':              'FFmpegExtractAudio',
-            'preferredcodec':   'mp3',
-            'preferredquality': '192',
-        }]
+        opts.update({
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+                'preferredquality': '192',
+            }],
+        })
 
     return opts
 
@@ -421,6 +394,7 @@ def run_download(job_id, url, opts):
             return
 
         jobs[job_id]['status'] = 'downloading'
+        jobs[job_id]['last_cancel_check'] = time.time()
 
         with yt_dlp.YoutubeDL(opts) as ydl:
             ydl.download([url])
@@ -428,71 +402,72 @@ def run_download(job_id, url, opts):
         if jobs.get(job_id, {}).get('cancelled'):
             jobs[job_id]['status'] = 'cancelled'
         else:
-            jobs[job_id]['status']  = 'complete'
+            jobs[job_id]['status'] = 'complete'
             jobs[job_id]['percent'] = 100
-
     except Exception as error:
         if jobs.get(job_id, {}).get('cancelled') or "cancelled" in str(error).lower():
             jobs[job_id]['status'] = 'cancelled'
         else:
             jobs[job_id]['status'] = 'error'
-            jobs[job_id]['error']  = yt_dlp_error_message(error)
+            jobs[job_id]['error'] = yt_dlp_error_message(error)
     finally:
-        threading.Thread(target=cleanup_download_folder, args=(job_id,), daemon=True).start()
+        cleanup_thread = threading.Thread(target=cleanup_download_folder, args=(job_id,))
+        cleanup_thread.daemon = True
+        cleanup_thread.start()
 
 
 @app.route('/api/info', methods=['POST'])
 def get_info():
     data = request.get_json(silent=True) or {}
-    url  = data.get('url', '').strip()
+    url = data.get('url', '').strip()
 
     if not validate_youtube_url(url):
-        return jsonify({"error": "Galat YouTube URL hai"}), 400
+        return jsonify({"error": "Invalid YouTube URL"}), 400
 
     is_playlist = 'playlist' in url or 'list=' in url
 
     try:
         if is_playlist:
             flat_opts = {
-                'quiet':          True,
-                'no_warnings':    True,
-                'skip_download':  True,
-                'extract_flat':   True,
+                'quiet': True,
+                'no_warnings': True,
+                'skip_download': True,
+                'extract_flat': True,
+                'extractor_args': {
+                    'youtube': {
+                        'js_runtimes': [f'node:{NODE_PATH}'],
+                    }
+                },
             }
-            flat_opts.update(get_cookies_opts())
-
             with yt_dlp.YoutubeDL(flat_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
 
             entries = [e for e in info.get('entries', []) if e]
-            videos  = []
 
+            videos = []
             for index, entry in enumerate(entries, start=1):
                 videos.append({
-                    "index":     index,
-                    "title":     entry.get('title') or "",
-                    "duration":  format_duration(entry.get('duration')),
+                    "index": index,
+                    "title": entry.get('title') or "",
+                    "duration": format_duration(entry.get('duration')),
                     "thumbnail": entry.get('thumbnail') or "",
-                    "url":       youtube_video_url(entry),
+                    "url": youtube_video_url(entry),
                 })
 
             first_formats = []
             if videos and videos[0]['url']:
-                try:
-                    with yt_dlp.YoutubeDL(make_info_opts()) as ydl2:
-                        first_info    = ydl2.extract_info(videos[0]['url'], download=False)
-                        first_formats = get_format_list(first_info.get('formats', []))
-                except Exception:
-                    pass
+                with yt_dlp.YoutubeDL(make_info_opts()) as ydl2:
+                    first_info = ydl2.extract_info(videos[0]['url'], download=False)
+                    first_formats = get_format_list(first_info.get('formats', []))
 
             return jsonify({
-                "type":        "playlist",
-                "title":       info.get('title') or "",
-                "channel":     info.get('channel') or info.get('uploader') or "",
-                "thumbnail":   entries[0].get('thumbnail') or info.get('thumbnail') or "" if entries else "",
+                "type": "playlist",
+                "title": info.get('title') or "",
+                "channel": info.get('channel') or info.get('uploader') or "",
+                "thumbnail": entries[0].get('thumbnail') or info.get('thumbnail') or "" if entries else "",
                 "video_count": len(videos),
-                "videos":      videos,
-                "formats":     first_formats,
+                "videos": videos,
+                "formats": first_formats,
             })
 
         else:
@@ -500,15 +475,15 @@ def get_info():
                 info = ydl.extract_info(url, download=False)
 
             return jsonify({
-                "type":             "video",
-                "title":            info.get('title') or "",
-                "channel":          info.get('channel') or info.get('uploader') or "",
-                "thumbnail":        info.get('thumbnail') or "",
-                "duration":         format_duration(info.get('duration')),
+                "type": "video",
+                "title": info.get('title') or "",
+                "channel": info.get('channel') or info.get('uploader') or "",
+                "thumbnail": info.get('thumbnail') or "",
+                "duration": format_duration(info.get('duration')),
                 "duration_seconds": info.get('duration') or 0,
-                "view_count":       format_view_count(info.get('view_count')),
-                "upload_date":      format_upload_date(info.get('upload_date')),
-                "formats":          get_format_list(info.get('formats', [])),
+                "view_count": format_view_count(info.get('view_count')),
+                "upload_date": format_upload_date(info.get('upload_date')),
+                "formats": get_format_list(info.get('formats', [])),
             })
 
     except Exception as error:
@@ -517,41 +492,40 @@ def get_info():
 
 @app.route('/api/download', methods=['POST'])
 def start_download():
-    data          = request.get_json(silent=True) or {}
-    url           = data.get('url', '').strip()
-    quality       = data.get('quality', '720p')
-    fmt           = data.get('format', 'mp4')
+    data = request.get_json(silent=True) or {}
+    url = data.get('url', '').strip()
+    quality = data.get('quality', '720p')
+    fmt = data.get('format', 'mp4')
     video_indices = data.get('video_indices') or []
 
     if not validate_youtube_url(url):
-        return jsonify({"error": "Galat YouTube URL hai"}), 400
+        return jsonify({"error": "Invalid YouTube URL"}), 400
 
     active = [j for j in jobs.values() if j['status'] == 'downloading']
     if len(active) >= 3:
-        return jsonify({"error": "3 downloads pehle se chal rahe hain — thodi der wait karein"}), 429
+        return jsonify({"error": "Zyada downloads chal rahe hain"}), 429
 
-    job_id      = str(uuid.uuid4())
+    job_id = str(uuid.uuid4())
     output_path = f'downloads/{job_id}'
-
     jobs[job_id] = {
-        'status':           'preparing',
-        'percent':          0,
-        'speed':            '',
-        'eta':              '',
-        'current_file':     '',
+        'status': 'preparing',
+        'percent': 0,
+        'speed': '',
+        'eta': '',
+        'current_file': '',
         'bytes_downloaded': 0,
-        'retry_count':      0,
-        'retrying':         False,
-        'cancelled':        False,
-        'created_at':       time.time(),
-        'output_path':      output_path,
+        'retry_count': 0,
+        'retrying': False,
+        'cancelled': False,
+        'created_at': time.time(),
+        'output_path': output_path,
     }
 
     os.makedirs(output_path)
     opts = build_ydl_opts(job_id, quality, fmt, output_path)
 
     if video_indices:
-        opts['playlist_items'] = ','.join(str(int(i) + 1) for i in video_indices)
+        opts['playlist_items'] = ','.join(str(int(index) + 1) for index in video_indices)
 
     thread = threading.Thread(target=run_download, args=(job_id, url, opts))
     thread.daemon = False
@@ -580,12 +554,12 @@ def cancel_download(job_id):
 def get_downloaded_files(output_path):
     if not os.path.exists(output_path):
         return []
-    skip_ext = {'.part', '.ytdl', '.temp', '.tmp', '.zip'}
+    skipped_extensions = {'.part', '.ytdl', '.temp', '.tmp', '.zip'}
     files = []
     for name in os.listdir(output_path):
         path = os.path.join(output_path, name)
         _, ext = os.path.splitext(name)
-        if os.path.isfile(path) and ext.lower() not in skip_ext:
+        if os.path.isfile(path) and ext.lower() not in skipped_extensions:
             files.append(path)
     return files
 
@@ -594,24 +568,24 @@ def get_downloaded_files(output_path):
 def download_file(job_id):
     job = jobs.get(job_id)
     if not job or job.get('status') != 'complete':
-        return jsonify({"error": "File ready nahi hai"}), 404
+        return jsonify({"error": "File not found"}), 404
 
     output_path = job.get('output_path') or f'downloads/{job_id}'
-    files       = get_downloaded_files(output_path)
+    files = get_downloaded_files(output_path)
 
     if not files:
-        return jsonify({"error": "File nahi mili"}), 404
+        return jsonify({"error": "File not found"}), 404
 
     if len(files) == 1:
         return send_file(files[0], as_attachment=True)
 
     zip_path = os.path.join(output_path, f'{job_id}.zip')
     if not os.path.exists(zip_path):
-        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zf:
-            for fp in files:
-                zf.write(fp, os.path.basename(fp))
+        with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            for file_path in files:
+                zip_file.write(file_path, os.path.basename(file_path))
 
-    return send_file(zip_path, as_attachment=True, download_name='playlist.zip')
+    return send_file(zip_path, as_attachment=True, download_name=f'{job_id}.zip')
 
 
 if __name__ == '__main__':
