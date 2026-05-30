@@ -16,11 +16,47 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 jobs = {}
 
 # ✅ Node.js path for yt-dlp JS runtime (YouTube 1080p+ ke liye zaroori)
-NODE_PATH = r"C:\nvm4w\nodejs\node.exe"
+NODE_PATH = os.environ.get('NODE_PATH', r"C:\nvm4w\nodejs\node.exe")
 
-# Fast fetch opts — video ke liye
+# ✅ Cookies file path
+COOKIES_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cookies.txt')
+
+
+def setup_cookies():
+    """
+    Railway par YOUTUBE_COOKIES env variable se cookies.txt file banao.
+    
+    Railway Dashboard mein:
+    Settings → Variables → Add Variable
+    Name:  YOUTUBE_COOKIES
+    Value: (cookies.txt ka poora content paste karo)
+    """
+    cookie_content = os.environ.get('YOUTUBE_COOKIES', '').strip()
+    if cookie_content:
+        try:
+            with open(COOKIES_FILE, 'w', encoding='utf-8') as f:
+                f.write(cookie_content)
+            print("[Cookies] cookies.txt successfully bana diya env variable se")
+        except Exception as e:
+            print(f"[Cookies] Error cookies file banane mein: {e}")
+    else:
+        print("[Cookies] YOUTUBE_COOKIES env variable nahi mila — bot detection ho sakti hai")
+
+
+# App start hone par cookies setup karo
+setup_cookies()
+
+
+def get_cookies_opts():
+    """Cookies opts return karo agar cookies.txt exist kare"""
+    if os.path.exists(COOKIES_FILE) and os.path.getsize(COOKIES_FILE) > 0:
+        return {'cookiefile': COOKIES_FILE}
+    return {}
+
+
+# Fast fetch opts — video info ke liye
 def make_info_opts():
-    return {
+    opts = {
         'quiet': True,
         'no_warnings': True,
         'skip_download': True,
@@ -32,6 +68,9 @@ def make_info_opts():
             }
         },
     }
+    opts.update(get_cookies_opts())
+    return opts
+
 
 # yt-dlp extractor args — download ke liye
 YT_EXTRACTOR_ARGS = {
@@ -71,7 +110,12 @@ cleanup_daemon.start()
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "version": "1.0"})
+    cookies_ok = os.path.exists(COOKIES_FILE) and os.path.getsize(COOKIES_FILE) > 0
+    return jsonify({
+        "status": "ok",
+        "version": "1.0",
+        "cookies_loaded": cookies_ok,
+    })
 
 
 @app.route('/')
@@ -243,6 +287,8 @@ def yt_dlp_error_message(error):
         return "Video available nahi hai"
     if "invalid" in message or "url" in message:
         return "Galat YouTube URL hai"
+    if "sign in" in message or "bot" in message:
+        return "YouTube ne block kiya — cookies update karein"
     if "network" in message or "timed out" in message or "connection" in message or "temporary failure" in message:
         return "Internet check karein"
     return "Kuch masla hua: " + str(error)
@@ -367,6 +413,9 @@ def build_ydl_opts(job_id, quality, fmt, output_path):
         'extractor_args': YT_EXTRACTOR_ARGS,
     }
 
+    # ✅ Cookies add karo agar available hon
+    opts.update(get_cookies_opts())
+
     if is_audio_only:
         opts.update({
             'postprocessors': [{
@@ -439,6 +488,8 @@ def get_info():
                     }
                 },
             }
+            flat_opts.update(get_cookies_opts())
+
             with yt_dlp.YoutubeDL(flat_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
 
