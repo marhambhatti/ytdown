@@ -9,640 +9,213 @@
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0a;
-      --bg2: #111111;
-      --bg3: #1a1a1a;
-      --bg4: #222222;
-      --red: #ff0000;
-      --red-dark: #cc0000;
-      --red-glow: rgba(255,0,0,0.15);
-      --text: #ffffff;
-      --text-dim: #888888;
-      --text-muted: #444444;
-      --border: #2a2a2a;
-      --success: #00c853;
-      --warning: #ffab00;
-      --error: #ff3d3d;
-      --radius: 12px;
-      --radius-lg: 20px;
-      --info: #2f80ff;
+      --bg: #0a0a0a; --bg2: #111111; --bg3: #1a1a1a; --bg4: #222222;
+      --red: #ff0000; --red-dark: #cc0000; --red-glow: rgba(255,0,0,0.15);
+      --text: #ffffff; --text-dim: #888888; --text-muted: #444444;
+      --border: #2a2a2a; --success: #00c853; --warning: #ffab00;
+      --error: #ff3d3d; --radius: 12px; --radius-lg: 20px; --info: #2f80ff;
     }
-
     * { box-sizing: border-box; }
-
     html { min-height: 100%; background: var(--bg); }
-
     body {
-      min-height: 100%;
-      margin: 0;
-      color: var(--text);
-      background:
-        radial-gradient(circle at 50% -20%, rgba(255, 0, 0, 0.18), transparent 34rem),
-        linear-gradient(180deg, var(--bg2), var(--bg) 42rem);
+      min-height: 100%; margin: 0; color: var(--text);
+      background: radial-gradient(circle at 50% -20%, rgba(255,0,0,0.18), transparent 34rem),
+                  linear-gradient(180deg, var(--bg2), var(--bg) 42rem);
       font-family: "DM Sans", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      letter-spacing: 0;
     }
-
     button, input, select { font: inherit; }
     button { border: 0; cursor: pointer; }
     button:disabled { cursor: not-allowed; opacity: 0.65; }
-
     nav {
-      position: sticky;
-      top: 0;
-      z-index: 20;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      min-height: 68px;
-      padding: 0 28px;
+      position: sticky; top: 0; z-index: 20;
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      min-height: 68px; padding: 0 28px;
       border-bottom: 1px solid var(--border);
-      background: rgba(10, 10, 10, 0.78);
-      backdrop-filter: blur(18px);
+      background: rgba(10,10,10,0.78); backdrop-filter: blur(18px);
     }
-
-    .brand {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      font-weight: 800;
-      font-size: 20px;
-    }
-
+    .brand { display: inline-flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; }
     .play-icon {
-      width: 36px;
-      height: 25px;
-      display: grid;
-      place-items: center;
-      border-radius: 7px;
-      color: var(--text);
-      background: var(--red);
-      box-shadow: 0 0 26px var(--red-glow);
-      font-size: 12px;
-      line-height: 1;
+      width: 36px; height: 25px; display: grid; place-items: center;
+      border-radius: 7px; color: var(--text); background: var(--red);
+      box-shadow: 0 0 26px var(--red-glow); font-size: 12px; line-height: 1;
     }
-
     .tagline { color: var(--text-dim); font-size: 14px; white-space: nowrap; }
-
-    main {
-      width: min(1040px, calc(100% - 32px));
-      margin: 0 auto;
-      padding-bottom: 70px;
-    }
-
+    main { width: min(1040px, calc(100% - 32px)); margin: 0 auto; padding-bottom: 70px; }
     .hero { padding: 60px 0 32px; text-align: center; }
-
     h1, h2, h3 { font-family: "Syne", system-ui, sans-serif; letter-spacing: 0; }
-
-    h1 {
-      max-width: 780px;
-      margin: 0 auto 12px;
-      font-size: 48px;
-      line-height: 1.02;
-      font-weight: 800;
-    }
-
+    h1 { max-width: 780px; margin: 0 auto 12px; font-size: 48px; line-height: 1.02; font-weight: 800; }
     .subtitle { margin: 0 0 32px; color: var(--text-dim); font-size: 18px; }
-
     .url-box {
-      display: grid;
-      grid-template-columns: minmax(0, 1fr) auto auto;
-      gap: 10px;
-      width: min(900px, 100%);
-      margin: 0 auto;
-      padding: 8px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      background: rgba(17, 17, 17, 0.9);
-      box-shadow: 0 16px 70px rgba(0, 0, 0, 0.35);
+      display: grid; grid-template-columns: minmax(0,1fr) auto auto;
+      gap: 10px; width: min(900px,100%); margin: 0 auto; padding: 8px;
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      background: rgba(17,17,17,0.9); box-shadow: 0 16px 70px rgba(0,0,0,0.35);
     }
-
     #urlInput {
-      width: 100%;
-      min-height: 56px;
-      border: 1px solid transparent;
-      border-radius: var(--radius);
-      padding: 0 18px;
-      color: var(--text);
-      background: var(--bg3);
-      outline: none;
-      transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+      width: 100%; min-height: 56px; border: 1px solid transparent;
+      border-radius: var(--radius); padding: 0 18px; color: var(--text);
+      background: var(--bg3); outline: none;
+      transition: border-color 180ms ease, box-shadow 180ms ease;
     }
-
     #urlInput::placeholder { color: var(--text-muted); }
-
-    #urlInput:focus {
-      border-color: var(--red);
-      box-shadow: 0 0 0 4px var(--red-glow);
-    }
-
-    #urlInput.valid { border-color: rgba(0, 200, 83, 0.8); }
+    #urlInput:focus { border-color: var(--red); box-shadow: 0 0 0 4px var(--red-glow); }
+    #urlInput.valid { border-color: rgba(0,200,83,0.8); }
     #urlInput.invalid { border-color: var(--error); }
-
     .btn {
-      min-height: 48px;
-      border-radius: var(--radius);
-      padding: 0 18px;
-      color: var(--text);
-      background: var(--bg4);
-      transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease, border-color 160ms ease;
+      min-height: 48px; border-radius: var(--radius); padding: 0 18px; color: var(--text);
+      background: var(--bg4); transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
     }
-
     .btn:hover:not(:disabled) { transform: translateY(-1px); }
-
-    .btn-red {
-      background: var(--red);
-      font-weight: 700;
-      box-shadow: 0 12px 36px var(--red-glow);
-    }
-
+    .btn-red { background: var(--red); font-weight: 700; box-shadow: 0 12px 36px var(--red-glow); }
     .btn-red:hover:not(:disabled) { background: var(--red-dark); }
-
-    .btn-outline {
-      border: 1px solid rgba(255, 0, 0, 0.45);
-      color: var(--red);
-      background: transparent;
-    }
-
-    .error-message {
-      display: none;
-      width: min(900px, 100%);
-      margin: 12px auto 0;
-      text-align: left;
-      color: var(--error);
-      font-size: 14px;
-    }
-
+    .btn-outline { border: 1px solid rgba(255,0,0,0.45); color: var(--red); background: transparent; }
+    .error-message { display: none; width: min(900px,100%); margin: 12px auto 0; text-align: left; color: var(--error); font-size: 14px; }
     .panel {
-      position: relative;
-      overflow: hidden;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      background: rgba(17, 17, 17, 0.92);
-      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+      position: relative; overflow: hidden;
+      border: 1px solid var(--border); border-radius: var(--radius-lg);
+      background: rgba(17,17,17,0.92); box-shadow: 0 24px 80px rgba(0,0,0,0.42);
     }
-
     #infoCard { display: none; margin-top: 22px; padding: 22px; }
-
-    #infoCard.show {
-      display: block;
-      animation: fadeInUp 360ms ease both;
-    }
-
+    #infoCard.show { display: block; animation: fadeInUp 360ms ease both; }
     .info-bg {
-      position: absolute;
-      inset: 0;
-      z-index: 0;
-      background-position: center;
-      background-size: cover;
-      opacity: 0.15;
-      filter: blur(18px);
-      transform: scale(1.08);
+      position: absolute; inset: 0; z-index: 0;
+      background-position: center; background-size: cover;
+      opacity: 0.15; filter: blur(18px); transform: scale(1.08);
     }
-
     .info-content {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: 220px minmax(0, 1fr);
-      gap: 20px;
-      align-items: start;
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: 220px minmax(0,1fr);
+      gap: 20px; align-items: start;
     }
-
     .thumb {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      object-fit: cover;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--bg3);
+      width: 100%; aspect-ratio: 16/9; object-fit: cover;
+      border-radius: 8px; border: 1px solid var(--border); background: var(--bg3);
     }
-
     .meta h2 { margin: 0 0 8px; font-size: 24px; line-height: 1.15; word-break: break-word; }
-
-    .meta-line {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px 14px;
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-
+    .meta-line { display: flex; flex-wrap: wrap; gap: 8px 14px; color: var(--text-dim); font-size: 14px; }
     .quality-row {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-      gap: 10px;
-      margin-top: 22px;
+      position: relative; z-index: 1;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(100px,1fr));
+      gap: 10px; margin-top: 22px;
     }
-
     .pill {
-      min-height: 64px;
-      padding: 9px 8px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      color: var(--text-dim);
-      background: rgba(26, 26, 26, 0.86);
-      text-align: center;
-      transition: border-color 160ms ease, background 160ms ease, color 160ms ease, box-shadow 160ms ease;
+      min-height: 64px; padding: 9px 8px;
+      border: 1px solid var(--border); border-radius: var(--radius);
+      color: var(--text-dim); background: rgba(26,26,26,0.86); text-align: center;
+      transition: border-color 160ms, background 160ms, color 160ms, box-shadow 160ms;
     }
-
+    .pill:hover:not(.selected) { border-color: var(--text-muted); transform: translateY(-2px); }
     .pill strong, .pill span { display: block; overflow-wrap: anywhere; }
-
     .pill strong { color: inherit; font-size: 14px; line-height: 1.2; }
-
     .pill span { margin-top: 4px; color: var(--text-muted); font-size: 12px; }
-
-    .pill.selected {
-      border-color: var(--red);
-      color: var(--text);
-      background: var(--red);
-      box-shadow: 0 12px 36px var(--red-glow);
-    }
-
-    .pill.selected span { color: rgba(255, 255, 255, 0.78); }
-
+    .pill.selected { border-color: var(--red); color: var(--text); background: var(--red); box-shadow: 0 12px 36px var(--red-glow); }
+    .pill.selected span { color: rgba(255,255,255,0.78); }
     .options-row {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 14px;
-      margin-top: 18px;
-      padding-top: 18px;
-      border-top: 1px solid var(--border);
+      position: relative; z-index: 1;
+      display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+      gap: 14px; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--border);
     }
-
-    .field-group {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-
+    .field-group { display: inline-flex; align-items: center; gap: 10px; color: var(--text-dim); font-size: 14px; }
     select {
-      min-height: 42px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 0 36px 0 12px;
-      color: var(--text);
-      background: var(--bg3);
-      outline: none;
+      min-height: 42px; border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 0 36px 0 12px; color: var(--text); background: var(--bg3); outline: none;
     }
-
     .switch { position: relative; width: 48px; height: 28px; display: inline-block; }
     .switch input { opacity: 0; width: 0; height: 0; }
-
-    .slider {
-      position: absolute;
-      inset: 0;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      background: var(--bg4);
-      transition: background 160ms ease, border-color 160ms ease;
-    }
-
-    .slider::before {
-      content: "";
-      position: absolute;
-      width: 20px;
-      height: 20px;
-      left: 3px;
-      top: 3px;
-      border-radius: 50%;
-      background: var(--text-dim);
-      transition: transform 160ms ease, background 160ms ease;
-    }
-
-    .switch input:checked + .slider { border-color: var(--red); background: rgba(255, 0, 0, 0.22); }
+    .slider { position: absolute; inset: 0; border: 1px solid var(--border); border-radius: 999px; background: var(--bg4); transition: background 160ms; }
+    .slider::before { content: ""; position: absolute; width: 20px; height: 20px; left: 3px; top: 3px; border-radius: 50%; background: var(--text-dim); transition: transform 160ms, background 160ms; }
+    .switch input:checked + .slider { border-color: var(--red); background: rgba(255,0,0,0.22); }
     .switch input:checked + .slider::before { transform: translateX(20px); background: var(--red); }
-
-    #playlistSection,
-    #progressSection,
-    #completeSection,
-    #historySection {
-      display: none;
-      margin-top: 18px;
-      padding: 22px;
-    }
-
-    .section-head {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      margin-bottom: 14px;
-    }
-
+    #playlistSection, #progressSection, #completeSection, #historySection { display: none; margin-top: 18px; padding: 22px; }
+    .section-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
     .section-title { margin: 0; font-size: 20px; }
-
     .small-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-
-    .mini-btn, .badge {
-      min-height: 34px;
-      border-radius: 999px;
-      padding: 0 12px;
-      font-size: 13px;
-    }
-
-    .mini-btn { border: 1px solid var(--border); color: var(--text); background: var(--bg3); }
-
-    .badge {
-      display: inline-grid;
-      place-items: center;
-      color: var(--text-dim);
-      background: var(--bg3);
-      border: 1px solid var(--border);
-    }
-
+    .mini-btn, .badge { min-height: 34px; border-radius: 999px; padding: 0 12px; font-size: 13px; }
+    .mini-btn { border: 1px solid var(--border); color: var(--text); background: var(--bg3); cursor: pointer; }
+    .mini-btn:hover { background: var(--bg4); }
+    .badge { display: inline-grid; place-items: center; color: var(--text-dim); background: var(--bg3); border: 1px solid var(--border); }
     .playlist-list { max-height: 380px; overflow: auto; padding-right: 6px; }
-
-    .playlist-item {
-      display: grid;
-      grid-template-columns: 28px 60px minmax(0, 1fr) auto;
-      gap: 12px;
-      align-items: center;
-      min-height: 78px;
-      border-bottom: 1px solid var(--border);
-    }
-
+    .playlist-item { display: grid; grid-template-columns: 28px 60px minmax(0,1fr) auto; gap: 12px; align-items: center; min-height: 78px; border-bottom: 1px solid var(--border); }
     .playlist-item:last-child { border-bottom: 0; }
-
     .check { width: 20px; height: 20px; accent-color: var(--red); cursor: pointer; }
-
-    .playlist-thumb {
-      width: 60px;
-      height: 38px;
-      object-fit: cover;
-      border-radius: 8px;
-      background: var(--bg4);
-    }
-
-    .playlist-title {
-      overflow: hidden;
-      color: var(--text);
-      white-space: nowrap;
-      text-overflow: ellipsis;
-      font-size: 14px;
-    }
-
+    .playlist-thumb { width: 60px; height: 38px; object-fit: cover; border-radius: 8px; background: var(--bg4); }
+    .playlist-title { overflow: hidden; color: var(--text); white-space: nowrap; text-overflow: ellipsis; font-size: 14px; }
     .playlist-duration { color: var(--text-dim); font-size: 13px; white-space: nowrap; }
-
     .download-wrap { display: none; margin-top: 18px; }
-
     #downloadBtn { width: 100%; height: 56px; font-size: 17px; }
-
-    .progress-track {
-      position: relative;
-      overflow: hidden;
-      height: 16px;
-      border-radius: 999px;
-      background: var(--bg4);
-      border: 1px solid var(--border);
-    }
-
-    .progress-fill {
-      position: absolute;
-      inset: 0 auto 0 0;
-      width: 0%;
-      border-radius: inherit;
-      background: var(--red);
-      box-shadow: 0 0 28px var(--red);
-      transition: width 420ms ease;
-    }
-
-    .progress-fill::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
-      animation: progressShimmer 1.5s linear infinite;
-    }
-
-    .progress-fill.retry {
-      background: var(--warning);
-      box-shadow: 0 0 24px rgba(255, 171, 0, 0.55);
-      animation: pulse 1s ease-in-out infinite;
-    }
-
-    .stats-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      margin-top: 14px;
-      color: var(--text-dim);
-      font-size: 14px;
-    }
-
-    .file-line, .playlist-line, .retry-line {
-      margin-top: 10px;
-      color: var(--text-dim);
-      overflow-wrap: anywhere;
-      font-size: 14px;
-    }
-
-    .retry-line {
-      display: none;
-      color: var(--warning);
-      padding: 10px 12px;
-      border: 1px solid rgba(255, 171, 0, 0.35);
-      border-radius: var(--radius);
-      background: rgba(255, 171, 0, 0.08);
-    }
-
+    .progress-track { position: relative; overflow: hidden; height: 16px; border-radius: 999px; background: var(--bg4); border: 1px solid var(--border); }
+    .progress-fill { position: absolute; inset: 0 auto 0 0; width: 0%; min-width: 4px; border-radius: inherit; background: var(--red); box-shadow: 0 0 28px var(--red); transition: width 420ms ease; }
+    .progress-fill::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,0.32), transparent); animation: progressShimmer 1.5s linear infinite; }
+    .progress-fill.retry { background: var(--warning); box-shadow: 0 0 24px rgba(255,171,0,0.55); animation: pulse 1s ease-in-out infinite; }
+    .stats-row { display: flex; justify-content: space-between; gap: 14px; margin-top: 14px; color: var(--text-dim); font-size: 14px; }
+    .file-line, .playlist-line, .retry-line { margin-top: 10px; color: var(--text-dim); overflow-wrap: anywhere; font-size: 14px; }
+    .retry-line { display: none; color: var(--warning); padding: 10px 12px; border: 1px solid rgba(255,171,0,0.35); border-radius: var(--radius); background: rgba(255,171,0,0.08); }
     .progress-actions { display: flex; justify-content: flex-end; margin-top: 16px; }
-
     .complete-inner { display: grid; justify-items: center; text-align: center; gap: 12px; }
-
     .checkmark { width: 82px; height: 82px; }
-
-    .checkmark circle {
-      fill: rgba(0, 200, 83, 0.12);
-      stroke: rgba(0, 200, 83, 0.45);
-      stroke-width: 2;
-    }
-
-    .checkmark path {
-      fill: none;
-      stroke: var(--success);
-      stroke-width: 6;
-      stroke-linecap: round;
-      stroke-linejoin: round;
-      stroke-dasharray: 80;
-      stroke-dashoffset: 80;
-      animation: checkmarkDraw 620ms ease forwards 160ms;
-    }
-
+    .checkmark circle { fill: rgba(0,200,83,0.12); stroke: rgba(0,200,83,0.45); stroke-width: 2; }
+    .checkmark path { fill: none; stroke: var(--success); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 80; stroke-dashoffset: 80; animation: checkmarkDraw 620ms ease forwards 160ms; }
     .complete-inner h2 { margin: 0; font-size: 28px; }
     .complete-meta { color: var(--text-dim); overflow-wrap: anywhere; }
-
-    .complete-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      margin-top: 8px;
-    }
-
-    .history-grid {
-      display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
-      gap: 10px;
-    }
-
-    .history-card {
-      min-height: 104px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 12px;
-      background: var(--bg3);
-    }
-
-    .history-title {
-      min-height: 38px;
-      color: var(--text);
-      font-size: 13px;
-      line-height: 1.3;
-      overflow: hidden;
-      display: -webkit-box;
-      -webkit-line-clamp: 2;
-      -webkit-box-orient: vertical;
-    }
-
+    .complete-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 8px; }
+    .history-grid { display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 10px; }
+    .history-card { min-height: 104px; border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: var(--bg3); }
+    .history-title { min-height: 38px; color: var(--text); font-size: 13px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
     .history-meta { margin-top: 10px; color: var(--text-dim); font-size: 12px; line-height: 1.4; }
-
-    #toastContainer {
-      position: fixed;
-      top: 86px;
-      right: 20px;
-      z-index: 50;
-      display: grid;
-      gap: 10px;
-      width: min(360px, calc(100vw - 32px));
-    }
-
-    .toast {
-      border: 1px solid var(--border);
-      border-left: 4px solid var(--info);
-      border-radius: var(--radius);
-      padding: 13px 14px;
-      color: var(--text);
-      background: rgba(17, 17, 17, 0.96);
-      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.38);
-      animation: toastSlideIn 260ms ease both;
-    }
-
+    #networkBanner { display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 40; padding: 10px 20px; border-radius: 999px; background: var(--warning); color: #000; font-size: 14px; font-weight: 500; box-shadow: 0 8px 32px rgba(0,0,0,0.4); }
+    #toastContainer { position: fixed; top: 86px; right: 20px; z-index: 50; display: grid; gap: 10px; width: min(360px,calc(100vw - 32px)); }
+    .toast { border: 1px solid var(--border); border-left: 4px solid var(--info); border-radius: var(--radius); padding: 13px 14px; color: var(--text); background: rgba(17,17,17,0.96); box-shadow: 0 16px 48px rgba(0,0,0,0.38); animation: toastSlideIn 260ms ease both; }
     .toast.success { border-left-color: var(--success); }
     .toast.error { border-left-color: var(--error); }
     .toast.warning { border-left-color: var(--warning); }
-
-    .spinner {
-      width: 16px;
-      height: 16px;
-      display: inline-block;
-      vertical-align: -3px;
-      margin-right: 8px;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      border-top-color: var(--text);
-      border-radius: 50%;
-      animation: spin 800ms linear infinite;
-    }
-
+    .spinner { width: 16px; height: 16px; display: inline-block; vertical-align: -3px; margin-right: 8px; border: 2px solid rgba(255,255,255,0.35); border-top-color: var(--text); border-radius: 50%; animation: spin 800ms linear infinite; }
     .shake { animation: shake 360ms ease; }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes progressShimmer {
-      from { transform: translateX(-100%); }
-      to { transform: translateX(100%); }
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    @keyframes checkmarkDraw { to { stroke-dashoffset: 0; } }
-
-    @keyframes toastSlideIn {
-      from { opacity: 0; transform: translateX(24px); }
-      to { opacity: 1; transform: translateX(0); }
-    }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-8px); }
-      50% { transform: translateX(7px); }
-      75% { transform: translateX(-4px); }
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.72; }
-    }
-
+    @keyframes fadeInUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes progressShimmer { from { transform:translateX(-100%); } to { transform:translateX(100%); } }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    @keyframes checkmarkDraw { to { stroke-dashoffset:0; } }
+    @keyframes toastSlideIn { from { opacity:0; transform:translateX(24px); } to { opacity:1; transform:translateX(0); } }
+    @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-8px)} 50%{transform:translateX(7px)} 75%{transform:translateX(-4px)} }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.72} }
     @media (max-width: 860px) {
       h1 { font-size: 40px; }
-
       .url-box, .info-content { grid-template-columns: 1fr; }
-
-      .quality-row { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-
-      .history-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .quality-row { grid-template-columns: repeat(4,minmax(0,1fr)); }
+      .history-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
     }
-
     @media (max-width: 560px) {
-      nav { padding: 0 16px; }
-      .tagline { display: none; }
-      main { width: min(100% - 20px, 1040px); }
-      .hero { padding-top: 42px; }
-      h1 { font-size: 34px; }
-      .subtitle { font-size: 16px; }
-      .url-box { padding: 6px; }
-      .url-box .btn { width: 100%; }
-
-      .quality-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-      .playlist-item { grid-template-columns: 26px 54px minmax(0, 1fr); }
+      nav { padding: 0 16px; } .tagline { display: none; }
+      main { width: min(100% - 20px, 1040px); } .hero { padding-top: 42px; }
+      h1 { font-size: 34px; } .subtitle { font-size: 16px; }
+      .url-box { padding: 6px; } .url-box .btn { width: 100%; }
+      .quality-row { grid-template-columns: repeat(2,minmax(0,1fr)); }
+      .playlist-item { grid-template-columns: 26px 54px minmax(0,1fr); }
       .playlist-duration { grid-column: 3; justify-self: start; }
-
       .stats-row, .section-head { align-items: flex-start; flex-direction: column; }
-
       .history-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
   <nav>
-    <div class="brand">
-      <span class="play-icon">▶</span>
-      <span>YTDown</span>
-    </div>
+    <div class="brand"><span class="play-icon">▶</span><span>YTDown</span></div>
     <div class="tagline">Fast · Free · Private</div>
   </nav>
-
   <main>
     <section class="hero">
       <h1>Download YouTube Videos</h1>
-      <p class="subtitle">Playlist, shorts, music — any quality</p>
-
-      <div class="url-box" id="urlBox">
+      <p class="subtitle">Playlist, Shorts, Music — Any Quality</p>
+      <div class="url-box">
         <input id="urlInput" type="url" placeholder="Paste a YouTube link..." autocomplete="off">
-        <button class="btn" id="pasteBtn" type="button" onclick="pasteFromClipboard()">Paste</button>
+        <button class="btn" type="button" onclick="pasteFromClipboard()">Paste</button>
         <button class="btn btn-red" id="fetchBtn" type="button" onclick="fetchInfo()">Fetch</button>
       </div>
-      <div class="error-message" id="errorMessage">Invalid YouTube URL</div>
+      <div class="error-message" id="errorMessage"></div>
     </section>
-
     <section class="panel" id="infoCard">
       <div class="info-bg" id="infoBg"></div>
       <div class="info-content">
-        <img class="thumb" id="videoThumb" alt="">
+        <img class="thumb" id="videoThumb" alt="" onerror="this.style.display='none'">
         <div class="meta">
           <h2 id="videoTitle"></h2>
           <div class="meta-line">
@@ -652,9 +225,7 @@
           </div>
         </div>
       </div>
-
       <div class="quality-row" id="qualityRow"></div>
-
       <div class="options-row">
         <label class="field-group">
           <span>Format</span>
@@ -666,17 +237,12 @@
             <option value="m4a">M4A</option>
           </select>
         </label>
-
         <label class="field-group">
           <span>Subtitles</span>
-          <span class="switch">
-            <input type="checkbox" id="subtitlesToggle">
-            <span class="slider"></span>
-          </span>
+          <span class="switch"><input type="checkbox" id="subtitlesToggle"><span class="slider"></span></span>
         </label>
       </div>
     </section>
-
     <section class="panel" id="playlistSection">
       <div class="section-head">
         <h2 class="section-title" id="playlistTitle">Playlist · 0 videos</h2>
@@ -688,27 +254,22 @@
       </div>
       <div class="playlist-list" id="playlistList"></div>
     </section>
-
     <div class="download-wrap" id="downloadWrap">
       <button class="btn btn-red" id="downloadBtn" type="button" onclick="startDownload()">⬇ Download</button>
     </div>
-
     <section class="panel" id="progressSection">
-      <div class="progress-track">
-        <div class="progress-fill" id="progressFill"></div>
-      </div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
       <div class="stats-row">
         <span id="progressStats">0% · Waiting · ETA --</span>
         <span id="bytesStats">0 MB</span>
       </div>
-      <div class="file-line" id="fileLine">Downloading:</div>
+      <div class="file-line" id="fileLine">Preparing...</div>
       <div class="playlist-line" id="playlistLine"></div>
-      <div class="retry-line" id="retryLine">🔄 Reconnecting... (Retry 0/10)</div>
+      <div class="retry-line" id="retryLine">🔄 Reconnecting... Retry 0/10)</div>
       <div class="progress-actions">
         <button class="btn btn-outline" type="button" onclick="cancelDownload()">Cancel</button>
       </div>
     </section>
-
     <section class="panel" id="completeSection">
       <div class="complete-inner">
         <svg class="checkmark" viewBox="0 0 80 80" aria-hidden="true">
@@ -723,264 +284,182 @@
         </div>
       </div>
     </section>
-
     <section class="panel" id="historySection">
       <div class="section-head">
         <h2 class="section-title">Recent Downloads</h2>
+        <button class="mini-btn" type="button" onclick="clearHistory()">Clear</button>
       </div>
       <div class="history-grid" id="historyGrid"></div>
     </section>
   </main>
-
+  <div id="networkBanner">⚠️ Internet lost — download paused</div>
   <div id="toastContainer"></div>
-
   <script>
-    const urlInput = document.getElementById('urlInput');
-    const errorMessage = document.getElementById('errorMessage');
-    const fetchBtn = document.getElementById('fetchBtn');
-    const infoCard = document.getElementById('infoCard');
-    const qualityRow = document.getElementById('qualityRow');
-    const playlistSection = document.getElementById('playlistSection');
-    const playlistList = document.getElementById('playlistList');
-    const selectedBadge = document.getElementById('selectedBadge');
-    const downloadWrap = document.getElementById('downloadWrap');
-    const downloadBtn = document.getElementById('downloadBtn');
-    const progressSection = document.getElementById('progressSection');
-    const progressFill = document.getElementById('progressFill');
-    const progressStats = document.getElementById('progressStats');
-    const bytesStats = document.getElementById('bytesStats');
-    const fileLine = document.getElementById('fileLine');
-    const playlistLine = document.getElementById('playlistLine');
-    const retryLine = document.getElementById('retryLine');
-    const completeSection = document.getElementById('completeSection');
-    const completeMeta = document.getElementById('completeMeta');
-    const historySection = document.getElementById('historySection');
-    const historyGrid = document.getElementById('historyGrid');
-    const toastContainer = document.getElementById('toastContainer');
-
-    let currentInfo = null;
-    let selectedQuality = '';
-    let activeJobId = '';
-    let pollTimer = null;
-    let downloadActive = false;
-    let selectedVideos = new Set();
-
-    // ✅ Thumbnail proxy helper — YouTube CORS bypass
+    // ── Thumb proxy (YouTube CORS bypass) ─────────────────
     function thumbProxy(url) {
       if (!url) return '';
       return `/api/thumb?url=${encodeURIComponent(url)}`;
     }
 
-    // LocalStorage helper with fallback for private browsing
+    // ── Safe localStorage ──────────────────────────────────
     const storage = {
-      setItem(key, value) {
-        try { localStorage.setItem(key, value); } catch (e) {}
-      },
-      getItem(key) {
-        try { return localStorage.getItem(key); } catch (e) { return null; }
-      },
-      removeItem(key) {
-        try { localStorage.removeItem(key); } catch (e) {}
-      }
+      _m: {},
+      setItem(k,v)  { try { localStorage.setItem(k,v); } catch(e) { this._m[k]=v; } },
+      getItem(k)    { try { return localStorage.getItem(k); } catch(e) { return this._m[k]||null; } },
+      removeItem(k) { try { localStorage.removeItem(k); } catch(e) { delete this._m[k]; } }
     };
 
+    // ── State ──────────────────────────────────────────────
+    let currentInfo    = null;
+    let selectedQuality = '';
+    let activeJobId    = '';
+    let pollTimer      = null;
+    let downloadActive = false;
+    let selectedVideos = new Set();
+    let lastPercent    = 0;
+
+    // ── DOM refs ───────────────────────────────────────────
+    const urlInput       = document.getElementById('urlInput');
+    const errorMessage   = document.getElementById('errorMessage');
+    const fetchBtn       = document.getElementById('fetchBtn');
+    const infoCard       = document.getElementById('infoCard');
+    const qualityRow     = document.getElementById('qualityRow');
+    const playlistSection= document.getElementById('playlistSection');
+    const playlistList   = document.getElementById('playlistList');
+    const selectedBadge  = document.getElementById('selectedBadge');
+    const downloadWrap   = document.getElementById('downloadWrap');
+    const downloadBtn    = document.getElementById('downloadBtn');
+    const progressSection= document.getElementById('progressSection');
+    const progressFill   = document.getElementById('progressFill');
+    const progressStats  = document.getElementById('progressStats');
+    const bytesStats     = document.getElementById('bytesStats');
+    const fileLine       = document.getElementById('fileLine');
+    const playlistLine   = document.getElementById('playlistLine');
+    const retryLine      = document.getElementById('retryLine');
+    const completeSection= document.getElementById('completeSection');
+    const completeMeta   = document.getElementById('completeMeta');
+    const historySection = document.getElementById('historySection');
+    const historyGrid    = document.getElementById('historyGrid');
+    const toastContainer = document.getElementById('toastContainer');
+    const networkBanner  = document.getElementById('networkBanner');
+
     function validateURL(url) {
-      const pattern = /^(https?:\/\/)?(www\.)?(youtube\.com\/watch\?v=|youtube\.com\/playlist\?list=|youtu\.be\/|youtube\.com\/shorts\/)[A-Za-z0-9_\-?=&%.]+/;
-      const valid = pattern.test((url || '').trim());
-      urlInput.classList.toggle('valid', valid);
-      urlInput.classList.toggle('invalid', Boolean(url) && !valid);
-      return valid;
+      const ok = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|playlist\?list=|shorts\/)|youtu\.be\/)[A-Za-z0-9_\-?=&%.]+/.test((url||'').trim());
+      urlInput.classList.toggle('valid',   ok);
+      urlInput.classList.toggle('invalid', Boolean(url) && !ok);
+      return ok;
     }
 
-    function showError(message) {
-      errorMessage.textContent = message;
-      errorMessage.style.display = 'block';
-    }
-
-    function clearError() {
-      errorMessage.style.display = 'none';
-    }
-
-    function setLoading(button, label) {
-      button.innerHTML = `<span class="spinner"></span>${label}`;
-      button.disabled = true;
-    }
-
-    function resetFetchButton() {
-      fetchBtn.textContent = 'Fetch';
-      fetchBtn.disabled = false;
-    }
+    function showError(msg) { errorMessage.textContent = msg; errorMessage.style.display = 'block'; }
+    function clearError()   { errorMessage.style.display = 'none'; }
 
     async function fetchInfo() {
       const url = urlInput.value.trim();
       clearError();
+      if (!validateURL(url)) { showError('Invalid YouTube URL'); shakeInput(); showToast('Invalid URL', 'error'); return; }
+      if (downloadActive)    { showToast('A download is already in progress', 'warning'); return; }
 
-      if (!validateURL(url)) {
-        showError('Invalid YouTube URL');
-        shakeInput();
-        showToast('Galat YouTube URL hai', 'error');
-        return;
-      }
-
-      if (downloadActive) {
-        showToast('Download chal rahi hai, pehle cancel karein', 'warning');
-        return;
-      }
-
-      setLoading(fetchBtn, 'Fetching...');
+      fetchBtn.innerHTML = '<span class="spinner"></span>Fetching...';
+      fetchBtn.disabled  = true;
 
       try {
-        const response = await fetch('/api/info', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ url })
-        });
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || 'Kuch masla hua');
-
+        const res  = await fetch('/api/info', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({url}) });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Something went wrong');
         currentInfo = data;
         renderInfo(data);
-        showToast('Video info ready', 'success');
-      } catch (error) {
-        showToast(error.message, 'error');
+        showToast('Video info ready!', 'success');
+      } catch(e) {
+        showError(e.message);
+        showToast(e.message, 'error');
         shakeInput();
       } finally {
-        resetFetchButton();
+        fetchBtn.textContent = 'Fetch';
+        fetchBtn.disabled    = false;
       }
     }
 
     function renderInfo(info) {
-      const rawThumb = info.thumbnail || '';
-
-      // ✅ FIX: Proxy se thumbnail load karo — YouTube CORS block nahi karega
-      const proxiedThumb = thumbProxy(rawThumb);
-
-      document.getElementById('videoThumb').src = proxiedThumb;
-      document.getElementById('infoBg').style.backgroundImage = proxiedThumb ? `url("${proxiedThumb}")` : 'none';
-      document.getElementById('videoTitle').textContent = info.title || 'Untitled';
-      document.getElementById('videoChannel').textContent = info.channel || 'Unknown channel';
-      document.getElementById('videoDuration').textContent = info.type === 'playlist'
-        ? `${info.video_count || 0} videos`
-        : (info.duration || '');
-      document.getElementById('videoViews').textContent = info.view_count ? `${info.view_count} views` : '';
-
+      const thumb = info.thumbnail || '';
+      const proxied = thumbProxy(thumb);
+      const img = document.getElementById('videoThumb');
+      img.src = proxied;
+      img.style.display = thumb ? 'block' : 'none';
+      document.getElementById('infoBg').style.backgroundImage = proxied ? `url("${proxied}")` : 'none';
+      document.getElementById('videoTitle').textContent    = info.title || 'Untitled';
+      document.getElementById('videoChannel').textContent  = info.channel || '';
+      document.getElementById('videoDuration').textContent = info.type === 'playlist' ? `${info.video_count||0} videos` : (info.duration||'');
+      document.getElementById('videoViews').textContent    = info.view_count ? `${info.view_count} views` : '';
       renderQualityPills(info.formats || []);
       renderPlaylist(info);
-
       infoCard.classList.remove('show');
       void infoCard.offsetWidth;
       infoCard.classList.add('show');
       downloadWrap.style.display = 'block';
       setDownloadState('default');
+      lastPercent = 0;
     }
 
     function renderQualityPills(formats) {
       qualityRow.innerHTML = '';
-
-      if (!formats || formats.length === 0) {
-        showToast('Koi format nahi mila', 'warning');
-        return;
-      }
-
-      const qualityOrder = ['4K', '2K', '1080p', '720p', '480p', '360p', 'Audio Only'];
-
-      const sorted = [...formats].sort((a, b) => {
-        const ai = qualityOrder.indexOf(a.quality);
-        const bi = qualityOrder.indexOf(b.quality);
-        return (ai === -1 ? 99 : ai) - (bi === -1 ? 99 : bi);
+      if (!formats.length) { showToast('No formats found', 'warning'); return; }
+      const order = ['8K','4K','2K','1080p','720p','480p','360p','Audio Only'];
+      const sorted = [...formats].sort((a,b) => {
+        const ai = order.indexOf(a.quality), bi = order.indexOf(b.quality);
+        return (ai<0?99:ai)-(bi<0?99:bi);
       });
-
-      sorted.forEach(format => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'pill';
-        button.dataset.quality = format.quality;
-
-        const label = format.quality === 'Audio Only' ? '🎵 Audio' : format.quality;
-        const filesize = format.filesize || '';
-
-        button.innerHTML = `<strong>${label}</strong><span>${filesize}</span>`;
-        button.onclick = () => selectQuality(format.quality);
-        qualityRow.appendChild(button);
+      sorted.forEach(fmt => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'pill'; btn.dataset.quality = fmt.quality;
+        btn.innerHTML = `<strong>${fmt.quality === 'Audio Only' ? '🎵 Audio' : fmt.quality}</strong><span>${fmt.filesize||''}</span>`;
+        btn.onclick = () => selectQuality(fmt.quality);
+        qualityRow.appendChild(btn);
       });
-
-      const preferred = ['1080p', '720p', '480p', '360p'];
-      const defaultQuality =
-        preferred.find(q => sorted.some(f => f.quality === q)) ||
-        sorted[0]?.quality;
-
-      if (defaultQuality) selectQuality(defaultQuality);
+      const preferred = ['1080p','720p','480p','360p'];
+      const def = preferred.find(q => sorted.some(f => f.quality===q)) || sorted[0]?.quality;
+      if (def) selectQuality(def);
     }
 
-    function selectQuality(quality) {
-      selectedQuality = quality;
-      document.querySelectorAll('.pill').forEach(pill => {
-        pill.classList.toggle('selected', pill.dataset.quality === quality);
-      });
-
-      if (quality === 'Audio Only') {
-        document.getElementById('formatSelect').value = 'mp3';
-      }
+    function selectQuality(q) {
+      selectedQuality = q;
+      document.querySelectorAll('.pill').forEach(p => p.classList.toggle('selected', p.dataset.quality===q));
+      if (q === 'Audio Only') document.getElementById('formatSelect').value = 'mp3';
     }
 
     function renderPlaylist(info) {
-      playlistList.innerHTML = '';
-      selectedVideos.clear();
-
-      if (info.type !== 'playlist') {
-        playlistSection.style.display = 'none';
-        return;
-      }
-
+      playlistList.innerHTML = ''; selectedVideos.clear();
+      if (info.type !== 'playlist') { playlistSection.style.display='none'; return; }
       const videos = info.videos || [];
       document.getElementById('playlistTitle').textContent = `Playlist · ${videos.length} videos`;
-
-      const fallbackThumb = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 68%22%3E%3Crect fill=%22%231a1a1a%22 width=%22120%22 height=%2268%22/%3E%3C/svg%3E';
-
-      videos.forEach((video, index) => {
-        selectedVideos.add(index);
+      const fallback = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 120 68%22%3E%3Crect fill=%22%231a1a1a%22 width=%22120%22 height=%2268%22/%3E%3C/svg%3E';
+      videos.forEach((v,i) => {
+        selectedVideos.add(i);
         const row = document.createElement('label');
         row.className = 'playlist-item';
-
-        // ✅ FIX: Playlist thumbnails bhi proxy se load karo
-        const tUrl = video.thumbnail ? thumbProxy(video.thumbnail) : fallbackThumb;
-
+        const tUrl = v.thumbnail ? thumbProxy(v.thumbnail) : fallback;
         row.innerHTML = `
-          <input class="check" type="checkbox" checked data-index="${index}">
-          <img class="playlist-thumb" src="${tUrl}" alt=""
-               onerror="this.src='${fallbackThumb}'">
-          <div class="playlist-title">${escapeHTML(video.title || 'Untitled')}</div>
-          <div class="playlist-duration">${video.duration || '0:00'}</div>
-        `;
+          <input class="check" type="checkbox" checked data-index="${i}">
+          <img class="playlist-thumb" src="${tUrl}" alt="" onerror="this.src='${fallback}'">
+          <div class="playlist-title">${escapeHTML(v.title||'Untitled')}</div>
+          <div class="playlist-duration">${v.duration||'0:00'}</div>`;
         playlistList.appendChild(row);
       });
-
-      playlistList.querySelectorAll('.check').forEach(check => {
-        check.addEventListener('change', () => {
-          const index = Number(check.dataset.index);
-          if (check.checked) {
-            selectedVideos.add(index);
-          } else {
-            selectedVideos.delete(index);
-          }
+      playlistList.querySelectorAll('.check').forEach(c => {
+        c.addEventListener('change', () => {
+          const idx = Number(c.dataset.index);
+          c.checked ? selectedVideos.add(idx) : selectedVideos.delete(idx);
           updateSelectedBadge();
         });
       });
-
       playlistSection.style.display = 'block';
       updateSelectedBadge();
     }
 
     function selectAllVideos(checked) {
-      playlistList.querySelectorAll('.check').forEach(check => {
-        check.checked = checked;
-        const index = Number(check.dataset.index);
-        if (checked) {
-          selectedVideos.add(index);
-        } else {
-          selectedVideos.delete(index);
-        }
+      playlistList.querySelectorAll('.check').forEach(c => {
+        c.checked = checked;
+        const idx = Number(c.dataset.index);
+        checked ? selectedVideos.add(idx) : selectedVideos.delete(idx);
       });
       updateSelectedBadge();
     }
@@ -991,357 +470,208 @@
     }
 
     async function startDownload() {
-      if (!currentInfo) {
-        showToast('Pehle video fetch karein', 'warning');
-        return;
-      }
-
-      if (!selectedQuality) {
-        showToast('Quality select karein', 'warning');
-        return;
-      }
-
-      if (currentInfo.type === 'playlist' && selectedVideos.size === 0) {
-        showToast('Playlist se kam az kam ek video select karein', 'warning');
-        return;
-      }
-
-      if (downloadActive) {
-        showToast('Pehle se download chal rahi hai', 'warning');
-        return;
-      }
-
-      const body = {
-        url: urlInput.value.trim(),
-        quality: selectedQuality,
-        format: document.getElementById('formatSelect').value,
-        video_indices: currentInfo.type === 'playlist'
-          ? Array.from(selectedVideos).sort((a, b) => a - b)
-          : []
-      };
+      if (!currentInfo)    { showToast('Please fetch a video first','warning'); return; }
+      if (!selectedQuality){ showToast('Please select a quality','warning'); return; }
+      if (currentInfo.type==='playlist' && selectedVideos.size===0) { showToast('Select at least one video from the playlist','warning'); return; }
+      if (downloadActive)  { showToast('A download is already in progress','warning'); return; }
 
       setDownloadState('preparing');
       downloadActive = true;
 
       try {
-        const response = await fetch('/api/download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
+        const res  = await fetch('/api/download', {
+          method:'POST', headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            url:           urlInput.value.trim(),
+            quality:       selectedQuality,
+            format:        document.getElementById('formatSelect').value,
+            subtitles:     document.getElementById('subtitlesToggle').checked,
+            video_indices: currentInfo.type==='playlist' ? Array.from(selectedVideos).sort((a,b)=>a-b) : []
+          })
         });
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || 'Download start nahi hua');
-
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || 'Could not start download');
         activeJobId = data.job_id;
         storage.setItem('yt_active_job', activeJobId);
         progressSection.style.display = 'block';
         completeSection.style.display = 'none';
         pollProgress();
-      } catch (error) {
+      } catch(e) {
         downloadActive = false;
         setDownloadState('error');
-        showToast(error.message, 'error');
+        showToast(e.message, 'error');
       }
     }
 
     function pollProgress() {
       if (!activeJobId) return;
       clearInterval(pollTimer);
-
       pollTimer = setInterval(async () => {
         try {
-          const response = await fetch(`/api/progress/${activeJobId}`);
-          const job = await response.json();
-
-          if (!response.ok) throw new Error(job.error || 'Job not found');
-
+          const res = await fetch(`/api/progress/${activeJobId}`);
+          if (!res.ok) return;
+          const job = await res.json();
           updateProgress(job);
-
-          if (job.status === 'complete') {
-            clearInterval(pollTimer);
-            downloadActive = false;
+          if (job.status==='complete') {
+            clearInterval(pollTimer); downloadActive=false;
             storage.removeItem('yt_active_job');
-            setDownloadState('complete');
-            showComplete(job);
-            addHistory(job);
+            storage.setItem('yt_last_complete_job', activeJobId);
+            setDownloadState('complete'); showComplete(job); addHistory(job);
           }
-
-          if (job.status === 'error') {
-            clearInterval(pollTimer);
-            downloadActive = false;
+          if (job.status==='error') {
+            clearInterval(pollTimer); downloadActive=false;
             storage.removeItem('yt_active_job');
-            setDownloadState('error');
-            showToast(job.error || 'Download failed', 'error');
+            setDownloadState('error'); showToast(job.error||'Download failed','error');
           }
-
-          if (job.status === 'cancelled') {
-            clearInterval(pollTimer);
-            downloadActive = false;
-            storage.removeItem('yt_active_job');
-            setDownloadState('default');
+          if (job.status==='cancelled') {
+            clearInterval(pollTimer); downloadActive=false;
+            storage.removeItem('yt_active_job'); setDownloadState('default');
           }
-        } catch (error) {
-          showToast(error.message, 'error');
-          clearInterval(pollTimer);
-        }
+        } catch(_) {}
       }, 800);
     }
 
     function updateProgress(job) {
-      const percent = Math.max(0, Math.min(100, Number(job.percent || 0)));
-      progressFill.style.width = `${percent}%`;
+      const raw     = Number(job.percent||0);
+      const percent = Math.max(lastPercent, Math.min(100, raw));
+      lastPercent   = percent;
+      progressFill.style.width = `${Math.max(percent,0.5)}%`;
       progressFill.classList.toggle('retry', Boolean(job.retrying));
-      progressStats.textContent = `${percent.toFixed(1)}% · ${job.speed || 'Waiting'} · ETA ${job.eta || '--'}`;
-      bytesStats.textContent = formatBytes(job.bytes_downloaded || 0);
-      fileLine.textContent = `Downloading: ${job.current_file || 'Preparing file...'}`;
-      retryLine.style.display = job.retrying ? 'block' : 'none';
-      retryLine.textContent = `🔄 Reconnecting... (Retry ${job.retry_count || 0}/10)`;
-
-      if (currentInfo?.type === 'playlist') {
-        const match = String(job.current_file || '').match(/^(\d+)-/);
-        const index = match ? Number(match[1]) : 1;
-        playlistLine.textContent = `Video ${index} of ${selectedVideos.size || currentInfo.video_count || 0}`;
-      } else {
-        playlistLine.textContent = '';
-      }
-
-      if (job.status === 'preparing') setDownloadState('preparing');
-      if (job.status === 'downloading') setDownloadState('downloading', percent);
+      progressStats.textContent = `${percent.toFixed(1)}% · ${job.speed||'Waiting'} · ETA ${job.eta||'--'}`;
+      bytesStats.textContent    = formatBytes(job.bytes_downloaded||0);
+      fileLine.textContent      = `Downloading: ${job.current_file||'Preparing...'}`;
+      retryLine.style.display   = job.retrying ? 'block' : 'none';
+      retryLine.textContent     = `🔄 Reconnecting... Retry ${job.retry_count||0}/10)`;
+      if (currentInfo?.type==='playlist') {
+        const m = String(job.current_file||'').match(/^(\d+)-/);
+        playlistLine.textContent = `Video ${m?Number(m[1]):1} of ${selectedVideos.size||currentInfo.video_count||0}`;
+      } else { playlistLine.textContent = ''; }
+      if (job.status==='downloading') setDownloadState('downloading', percent);
+      if (job.status==='preparing')   setDownloadState('preparing');
     }
 
     async function cancelDownload() {
       if (!activeJobId) return;
-
-      try {
-        downloadBtn.disabled = true;
-        await fetch(`/api/cancel/${activeJobId}`, { method: 'POST' });
-        clearInterval(pollTimer);
-        storage.removeItem('yt_active_job');
-        activeJobId = '';
-        downloadActive = false;
-        resetDownloadPanels();
-        setDownloadState('default');
-        showToast('Download cancelled', 'info');
-      } catch (error) {
-        showToast('Cancel nahi hua', 'error');
-        downloadBtn.disabled = false;
-      }
+      try { await fetch(`/api/cancel/${activeJobId}`, {method:'POST'}); } catch(_) {}
+      clearInterval(pollTimer);
+      storage.removeItem('yt_active_job');
+      activeJobId=''; downloadActive=false;
+      resetDownloadPanels(); setDownloadState('default');
+      showToast('Download cancel kar diya','info');
     }
 
     function saveFile() {
-      if (!activeJobId) {
-        activeJobId = storage.getItem('yt_last_complete_job') || '';
-      }
-
-      if (!activeJobId) {
-        showToast('File ready nahi hai', 'warning');
-        return;
-      }
-
-      showToast('Saving file...', 'info');
-      setTimeout(() => {
-        window.location.href = `/api/file/${activeJobId}`;
-      }, 500);
+      const jid = activeJobId || storage.getItem('yt_last_complete_job') || '';
+      if (!jid) { showToast('File is not ready yet','warning'); return; }
+      showToast('Saving file...','info');
+      setTimeout(() => { window.location.href = `/api/file/${jid}`; }, 400);
     }
 
     function showComplete(job) {
-      storage.setItem('yt_last_complete_job', activeJobId);
       progressSection.style.display = 'none';
       completeSection.style.display = 'block';
-      completeMeta.textContent = `${job.current_file || currentInfo?.title || 'Downloaded file'} · ${formatBytes(job.bytes_downloaded || 0)}`;
-      downloadActive = false;
+      completeMeta.textContent = `${job.current_file||currentInfo?.title||'File'} · ${formatBytes(job.bytes_downloaded||0)}`;
     }
 
     function resetUI() {
-      currentInfo = null;
-      selectedQuality = '';
-      activeJobId = '';
-      downloadActive = false;
-      selectedVideos.clear();
-      clearInterval(pollTimer);
+      currentInfo=null; selectedQuality=''; activeJobId=''; downloadActive=false;
+      selectedVideos.clear(); lastPercent=0; clearInterval(pollTimer);
       storage.removeItem('yt_active_job');
-
-      urlInput.value = '';
-      urlInput.classList.remove('valid', 'invalid', 'shake');
-      clearError();
-      infoCard.classList.remove('show');
-      playlistSection.style.display = 'none';
-      downloadWrap.style.display = 'none';
-      resetDownloadPanels();
-      setDownloadState('default');
-      fetchBtn.disabled = false;
+      urlInput.value=''; urlInput.classList.remove('valid','invalid','shake');
+      clearError(); infoCard.classList.remove('show');
+      playlistSection.style.display='none'; downloadWrap.style.display='none';
+      resetDownloadPanels(); setDownloadState('default'); fetchBtn.disabled=false;
     }
 
     function resetDownloadPanels() {
-      progressSection.style.display = 'none';
-      completeSection.style.display = 'none';
-      progressFill.style.width = '0%';
-      progressFill.classList.remove('retry');
-      progressStats.textContent = '0% · Waiting · ETA --';
-      bytesStats.textContent = '0 MB';
-      fileLine.textContent = 'Downloading:';
-      playlistLine.textContent = '';
-      retryLine.style.display = 'none';
+      progressSection.style.display='none'; completeSection.style.display='none';
+      progressFill.style.width='0%'; progressFill.classList.remove('retry');
+      progressStats.textContent='0% · Waiting · ETA --'; bytesStats.textContent='0 MB';
+      fileLine.textContent='Preparing...'; playlistLine.textContent=''; retryLine.style.display='none';
     }
 
     async function pasteFromClipboard() {
       try {
         const text = await navigator.clipboard.readText();
-        urlInput.value = text.trim();
-        validateURL(urlInput.value);
-        fetchInfo();
-      } catch (error) {
-        showToast('Clipboard access nahi mila', 'warning');
+        urlInput.value = text.trim(); validateURL(urlInput.value);
+        if (validateURL(urlInput.value)) fetchInfo();
+      } catch(_) { showToast('Could not access clipboard — please paste manually','warning'); }
+    }
+
+    function setDownloadState(state, percent=0) {
+      downloadBtn.onclick = (state==='complete') ? saveFile : startDownload;
+      switch(state) {
+        case 'default':     downloadBtn.innerHTML='⬇ Download'; downloadBtn.disabled=false; break;
+        case 'preparing':   downloadBtn.innerHTML='<span class="spinner"></span>Preparing...'; downloadBtn.disabled=true; break;
+        case 'downloading': downloadBtn.textContent=`⬇ Downloading ${Math.round(percent)}%`; downloadBtn.disabled=true; break;
+        case 'complete':    downloadBtn.textContent='✅ Download Complete — Save File'; downloadBtn.disabled=false; break;
+        case 'error':       downloadBtn.textContent='❌ Try Again'; downloadBtn.disabled=false; downloadBtn.onclick=startDownload; break;
       }
     }
 
-    function setDownloadState(state, percent = 0) {
-      if (state === 'default') {
-        downloadBtn.innerHTML = '⬇ Download';
-        downloadBtn.disabled = false;
-      }
-
-      if (state === 'preparing') {
-        downloadBtn.innerHTML = '<span class="spinner"></span>⏳ Preparing...';
-        downloadBtn.disabled = true;
-      }
-
-      if (state === 'downloading') {
-        downloadBtn.textContent = `⬇ Downloading ${Math.round(percent)}%`;
-        downloadBtn.disabled = true;
-      }
-
-      if (state === 'complete') {
-        downloadBtn.textContent = '✅ Done! Save File';
-        downloadBtn.disabled = false;
-        downloadBtn.onclick = saveFile;
-      } else {
-        downloadBtn.onclick = startDownload;
-      }
-
-      if (state === 'error') {
-        downloadBtn.textContent = '❌ Try Again';
-        downloadBtn.disabled = false;
-      }
-    }
-
-    function showToast(message, type = 'info') {
-      const toast = document.createElement('div');
-      toast.className = `toast ${type}`;
-      toast.textContent = message;
-      toastContainer.appendChild(toast);
-
-      setTimeout(() => {
-        toast.style.transition = 'opacity 220ms ease, transform 220ms ease';
-        toast.style.opacity = '0';
-        toast.style.transform = 'translateX(24px)';
-        setTimeout(() => toast.remove(), 220);
-      }, 4000);
-    }
-
-    function shakeInput() {
-      urlInput.classList.remove('shake');
-      void urlInput.offsetWidth;
-      urlInput.classList.add('shake');
-    }
-
-    function formatBytes(bytes) {
-      bytes = Number(bytes || 0);
-      if (bytes >= 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
-      if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-      if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-      return `${bytes} B`;
-    }
-
-    function escapeHTML(value) {
-      return String(value).replace(/[&<>"']/g, char => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
-      }[char]));
+    function showToast(msg, type='info') {
+      const t = document.createElement('div');
+      t.className=`toast ${type}`; t.textContent=msg;
+      toastContainer.appendChild(t);
+      setTimeout(() => { t.style.cssText='opacity:0;transform:translateX(24px);transition:all 220ms'; setTimeout(()=>t.remove(),220); }, 4000);
     }
 
     function addHistory(job) {
       try {
-        const history = JSON.parse(storage.getItem('yt_history') || '[]');
-        history.unshift({
-          title: currentInfo?.title || job.current_file || 'Download',
-          quality: selectedQuality || 'auto',
-          size: formatBytes(job.bytes_downloaded || 0),
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-        });
-        storage.setItem('yt_history', JSON.stringify(history.slice(0, 5)));
+        const h = JSON.parse(storage.getItem('yt_history')||'[]');
+        h.unshift({ title: currentInfo?.title||job.current_file||'Download', quality: selectedQuality||'auto', size: formatBytes(job.bytes_downloaded||0), time: new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}) });
+        storage.setItem('yt_history', JSON.stringify(h.slice(0,5)));
         renderHistory();
-      } catch (e) {
-        console.warn('History save failed');
-      }
+      } catch(_) {}
     }
 
     function renderHistory() {
       try {
-        const history = JSON.parse(storage.getItem('yt_history') || '[]');
-        historyGrid.innerHTML = '';
-
-        if (!history.length) {
-          historySection.style.display = 'none';
-          return;
-        }
-
-        history.forEach(item => {
+        const h = JSON.parse(storage.getItem('yt_history')||'[]');
+        historyGrid.innerHTML='';
+        if (!h.length) { historySection.style.display='none'; return; }
+        h.forEach(item => {
           const card = document.createElement('div');
-          card.className = 'history-card';
-          card.innerHTML = `
-            <div class="history-title">${escapeHTML(item.title)}</div>
-            <div class="history-meta">${escapeHTML(item.quality)} · ${escapeHTML(item.size)}<br>${escapeHTML(item.time)}</div>
-          `;
+          card.className='history-card';
+          card.innerHTML=`<div class="history-title">${escapeHTML(item.title)}</div><div class="history-meta">${escapeHTML(item.quality)} · ${escapeHTML(item.size)}<br>${escapeHTML(item.time)}</div>`;
           historyGrid.appendChild(card);
         });
-
-        historySection.style.display = 'block';
-      } catch (e) {
-        historySection.style.display = 'none';
-      }
+        historySection.style.display='block';
+      } catch(_) { historySection.style.display='none'; }
     }
 
-    urlInput.addEventListener('input', () => {
-      clearError();
-      validateURL(urlInput.value);
-    });
+    function clearHistory() { storage.removeItem('yt_history'); renderHistory(); showToast('History clear','info'); }
 
-    urlInput.addEventListener('keydown', event => {
-      if (event.key === 'Enter') fetchInfo();
-    });
+    function shakeInput() { urlInput.classList.remove('shake'); void urlInput.offsetWidth; urlInput.classList.add('shake'); }
 
-    window.addEventListener('online', () => {
-      showToast('Internet wapas aa gaya!', 'success');
-      if (activeJobId) pollProgress();
-    });
+    function formatBytes(b) {
+      b=Number(b||0);
+      if(b>=1073741824) return `${(b/1073741824).toFixed(2)} GB`;
+      if(b>=1048576)    return `${(b/1048576).toFixed(1)} MB`;
+      if(b>=1024)       return `${(b/1024).toFixed(1)} KB`;
+      return `${b} B`;
+    }
 
-    window.addEventListener('offline', () => {
-      showToast('Internet gaya — download pause hai', 'warning');
-    });
+    function escapeHTML(v) { return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c])); }
 
-    window.addEventListener('beforeunload', event => {
-      if (downloadActive) {
-        event.preventDefault();
-        event.returnValue = '';
-      }
-    });
+    // Network events
+    window.addEventListener('online',  () => { networkBanner.style.display='none'; showToast('Internet connection restored! ✅','success'); if(activeJobId&&downloadActive) pollProgress(); });
+    window.addEventListener('offline', () => { networkBanner.style.display='block'; showToast('Internet lost — download paused ⚠️','warning'); });
+    window.addEventListener('beforeunload', e => { if(downloadActive){e.preventDefault();e.returnValue='';} });
 
+    urlInput.addEventListener('input',   () => { clearError(); validateURL(urlInput.value); });
+    urlInput.addEventListener('keydown', e  => { if(e.key==='Enter') fetchInfo(); });
+    document.addEventListener('keydown', e  => { if((e.ctrlKey||e.metaKey)&&e.key==='d'&&!downloadActive&&currentInfo){e.preventDefault();startDownload();} });
+
+    // Init
     renderHistory();
-
-    // Resume download if browser was closed mid-download
-    try {
-      const savedJob = storage.getItem('yt_active_job');
-      if (savedJob) {
-        activeJobId = savedJob;
-        downloadActive = true;
-        progressSection.style.display = 'block';
-        downloadWrap.style.display = 'block';
-        setDownloadState('downloading', 0);
-        pollProgress();
-      }
-    } catch (e) {
-      console.warn('Resume failed');
+    const savedJob = storage.getItem('yt_active_job');
+    if (savedJob) {
+      activeJobId=savedJob; downloadActive=true;
+      progressSection.style.display='block'; downloadWrap.style.display='block';
+      setDownloadState('downloading',0);
+      showToast('Resuming previous download...','info');
+      pollProgress();
     }
   </script>
 </body>
