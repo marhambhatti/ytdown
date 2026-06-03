@@ -120,13 +120,15 @@ def cookie_opts():
 
 
 def youtube_extractor_args(skip_manifests=False):
-    youtube_args = {}
+    youtube_args = {
+        'player_client': ['web', 'android', 'ios'],  # ← fallback chain add karo
+    }
     if NODE_RUNTIME:
         youtube_args['js_runtimes'] = [NODE_RUNTIME]
     if skip_manifests:
         youtube_args['skip'] = ['hls', 'dash']
 
-    return {'youtube': youtube_args} if youtube_args else {}
+    return {'youtube': youtube_args}
 
 
 ensure_cookie_file_from_env()
