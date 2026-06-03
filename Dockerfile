@@ -4,6 +4,7 @@ FROM python:3.11-slim
 # ─── System dependencies: ffmpeg (audio/video merge ke liye zaroori) ─────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    nodejs \
     curl \
     ca-certificates \
     && rm -rf /var/lib/apt/lists/*

@@ -68,6 +68,51 @@ def cookies_available():
     return os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 20
 
 
+def cookie_diagnostics():
+    if not cookies_available():
+        return {
+            "status": "not found",
+            "has_youtube_domain": False,
+            "auth_cookie_names": [],
+        }
+
+    auth_names = {
+        "SID",
+        "HSID",
+        "SSID",
+        "APISID",
+        "SAPISID",
+        "__Secure-1PSID",
+        "__Secure-3PSID",
+        "__Secure-1PAPISID",
+        "__Secure-3PAPISID",
+    }
+    found_names = set()
+    has_youtube_domain = False
+
+    try:
+        with open(COOKIE_FILE, 'r', encoding='utf-8', errors='ignore') as cookie_file:
+            for line in cookie_file:
+                if "youtube.com" in line:
+                    has_youtube_domain = True
+
+                parts = line.strip().split('\t')
+                if len(parts) >= 7 and parts[5] in auth_names:
+                    found_names.add(parts[5])
+    except OSError:
+        return {
+            "status": "unreadable",
+            "has_youtube_domain": False,
+            "auth_cookie_names": [],
+        }
+
+    return {
+        "status": "loaded",
+        "has_youtube_domain": has_youtube_domain,
+        "auth_cookie_names": sorted(found_names),
+    }
+
+
 def cookie_opts():
     if cookies_available():
         return {'cookiefile': COOKIE_FILE}
@@ -133,11 +178,14 @@ cleanup_daemon.start()
 
 @app.route('/api/health', methods=['GET'])
 def health():
+    cookie_status = cookie_diagnostics()
     return jsonify({
         "status": "ok",
         "version": "2.0",
-        "cookies": "loaded" if cookies_available() else "not found",
+        "cookies": cookie_status["status"],
         "cookies_path": COOKIE_FILE,
+        "cookies_has_youtube_domain": cookie_status["has_youtube_domain"],
+        "cookies_auth_names": cookie_status["auth_cookie_names"],
         "node_runtime": "loaded" if NODE_RUNTIME else "not found",
     })
 
@@ -332,6 +380,10 @@ def youtube_video_url(entry):
 
 def yt_dlp_error_message(error):
     message = str(error).lower()
+    if "sign in to confirm" in message or "not a bot" in message or "use --cookies" in message:
+        if cookies_available():
+            return "YouTube ne cookies accept nahi ki. Fresh logged-in YouTube cookies export karke dobara upload karein."
+        return "YouTube login cookies required hain. Railway par cookies upload karein."
     if "private" in message:
         return "Yeh video private hai"
     if "age" in message or "sign in to confirm your age" in message:
