@@ -31,11 +31,4 @@ RUN touch /app/cookies.txt
 EXPOSE 8080
 
 # ─── Gunicorn se run karo (production-grade, threads ke saath) ───────────────
-CMD gunicorn \
-    --bind 0.0.0.0:$PORT \
-    --workers 1 \
-    --threads 8 \
-    --timeout 300 \
-    --keep-alive 5 \
-    --log-level info \
-    app:app
+CMD ["sh", "-c", "gunicorn --bind 0.0.0.0:${PORT:-8080} --workers 1 --threads 8 --timeout 300 --keep-alive 5 --log-level info app:app"]
