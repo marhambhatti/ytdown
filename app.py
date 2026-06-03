@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request, send_file, send_from_directory, Response
 from flask_cors import CORS
+import base64
 import yt_dlp
 import threading
 import uuid
@@ -15,30 +16,91 @@ CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 jobs = {}
 
-# ✅ Node.js path for yt-dlp JS runtime (YouTube 1080p+ ke liye zaroori)
-NODE_PATH = r"C:\nvm4w\nodejs\node.exe"
+COOKIE_FILE = os.environ.get(
+    'YT_COOKIES_FILE',
+    '/app/cookies.txt' if os.path.exists('/app') else 'cookies.txt'
+)
+ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', '')
+
+
+def resolve_node_runtime():
+    configured_node = os.environ.get('NODE_PATH', '').strip()
+    if configured_node and os.path.exists(configured_node):
+        return f'node:{configured_node}'
+
+    node_path = shutil.which('node')
+    if node_path:
+        return f'node:{node_path}'
+
+    return None
+
+
+NODE_RUNTIME = resolve_node_runtime()
+
+
+def write_cookie_file(content):
+    content = (content or '').replace('\r\n', '\n').strip() + '\n'
+    cookie_dir = os.path.dirname(os.path.abspath(COOKIE_FILE))
+    if cookie_dir:
+        os.makedirs(cookie_dir, exist_ok=True)
+
+    with open(COOKIE_FILE, 'w', encoding='utf-8') as cookie_file:
+        cookie_file.write(content)
+
+
+def ensure_cookie_file_from_env():
+    cookies_b64 = os.environ.get('YT_COOKIES_B64', '').strip()
+    cookies_text = os.environ.get('YT_COOKIES', '').strip()
+
+    if not cookies_b64 and not cookies_text:
+        return
+
+    try:
+        if cookies_b64:
+            cookies_text = base64.b64decode(cookies_b64).decode('utf-8')
+
+        write_cookie_file(cookies_text)
+    except Exception as error:
+        print(f"Cookie env load failed: {error}", flush=True)
+
+
+def cookies_available():
+    return os.path.exists(COOKIE_FILE) and os.path.getsize(COOKIE_FILE) > 20
+
+
+def cookie_opts():
+    if cookies_available():
+        return {'cookiefile': COOKIE_FILE}
+    return {}
+
+
+def youtube_extractor_args(skip_manifests=False):
+    youtube_args = {}
+    if NODE_RUNTIME:
+        youtube_args['js_runtimes'] = [NODE_RUNTIME]
+    if skip_manifests:
+        youtube_args['skip'] = ['hls', 'dash']
+
+    return {'youtube': youtube_args} if youtube_args else {}
+
+
+ensure_cookie_file_from_env()
 
 # Fast fetch opts — video ke liye
 def make_info_opts():
-    return {
+    opts = {
         'quiet': True,
         'no_warnings': True,
         'skip_download': True,
         'simulate': True,
-        'extractor_args': {
-            'youtube': {
-                'js_runtimes': [f'node:{NODE_PATH}'],
-                'skip': ['hls', 'dash'],
-            }
-        },
     }
 
-# yt-dlp extractor args — download ke liye
-YT_EXTRACTOR_ARGS = {
-    'youtube': {
-        'js_runtimes': [f'node:{NODE_PATH}']
-    }
-}
+    extractor_args = youtube_extractor_args(skip_manifests=True)
+    if extractor_args:
+        opts['extractor_args'] = extractor_args
+
+    opts.update(cookie_opts())
+    return opts
 
 if not os.path.exists('downloads'):
     os.makedirs('downloads')
@@ -71,7 +133,42 @@ cleanup_daemon.start()
 
 @app.route('/api/health', methods=['GET'])
 def health():
-    return jsonify({"status": "ok", "version": "1.0"})
+    return jsonify({
+        "status": "ok",
+        "version": "2.0",
+        "cookies": "loaded" if cookies_available() else "not found",
+        "cookies_path": COOKIE_FILE,
+        "node_runtime": "loaded" if NODE_RUNTIME else "not found",
+    })
+
+
+@app.route('/api/cookies', methods=['POST'])
+def update_cookies():
+    if not ADMIN_TOKEN:
+        return jsonify({"error": "ADMIN_TOKEN env var set nahi hai"}), 500
+
+    token = request.headers.get('X-Admin-Token', '')
+    if token != ADMIN_TOKEN:
+        return jsonify({"error": "Invalid admin token"}), 401
+
+    data = request.get_json(silent=True) or {}
+    content = data.get('cookies', '')
+    if not content or not content.strip():
+        return jsonify({"error": "cookies empty hain"}), 400
+
+    if 'youtube.com' not in content and '.youtube.com' not in content:
+        return jsonify({"error": "Yeh YouTube cookies.txt nahi lag raha"}), 400
+
+    try:
+        write_cookie_file(content)
+    except Exception as error:
+        return jsonify({"error": f"Cookies save nahi hui: {error}"}), 500
+
+    return jsonify({
+        "success": True,
+        "path": COOKIE_FILE,
+        "size": os.path.getsize(COOKIE_FILE),
+    })
 
 
 @app.route('/')
@@ -364,8 +461,13 @@ def build_ydl_opts(job_id, quality, fmt, output_path):
         'progress_hooks': [make_progress_hook(job_id)],
         'format': format_str,
         'merge_output_format': 'mp4' if requested_format == 'mp4' else requested_format,
-        'extractor_args': YT_EXTRACTOR_ARGS,
     }
+
+    extractor_args = youtube_extractor_args()
+    if extractor_args:
+        opts['extractor_args'] = extractor_args
+
+    opts.update(cookie_opts())
 
     if is_audio_only:
         opts.update({
@@ -433,12 +535,12 @@ def get_info():
                 'no_warnings': True,
                 'skip_download': True,
                 'extract_flat': True,
-                'extractor_args': {
-                    'youtube': {
-                        'js_runtimes': [f'node:{NODE_PATH}'],
-                    }
-                },
             }
+            extractor_args = youtube_extractor_args()
+            if extractor_args:
+                flat_opts['extractor_args'] = extractor_args
+            flat_opts.update(cookie_opts())
+
             with yt_dlp.YoutubeDL(flat_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
 

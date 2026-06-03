@@ -1,54 +1,139 @@
-# YouTube Downloader
+# YTDown — Railway Deployment Guide
 
-## Setup
+## Files Structure
 
-```bash
-pip install -r requirements.txt
+```
+ytdown/
+├── app.py              ← Backend (cookies support included)
+├── requirements.txt    ← Python dependencies
+├── Dockerfile          ← Railway ke liye (ffmpeg included)
+├── railway.toml        ← Railway config
+├── cookies.txt         ← YouTube cookies (gitignore me hai!)
+├── update_cookies.py   ← Cookies update karne ka script
+└── templates/
+    └── index.html      ← Frontend
 ```
 
-## Run
+---
+
+## Step 1: Railway pe Deploy Karo
+
+### Option A: GitHub se (Recommended)
+
+1. GitHub repo banao
+2. Yeh sab files push karo (`cookies.txt` push MAT karo — .gitignore me hai)
+3. Railway.app pe jaao → New Project → Deploy from GitHub
+4. Repo select karo → Deploy
+
+### Option B: Railway CLI se
 
 ```bash
-python app.py
+npm install -g @railway/cli
+railway login
+railway init
+railway up
 ```
 
-## Open
+---
 
-Visit `http://localhost:5000` in your browser
+## Step 2: Environment Variables Set Karo
 
-## Features
+Railway Dashboard → Your Service → Variables → Add:
 
-✅ Download single videos, playlists, and shorts  
-✅ Multiple quality options (4K, 2K, 1080p, 720p, 480p, 360p, Audio)  
-✅ Format selection (MP4, MKV, WebM, MP3, M4A)  
-✅ Playlist multi-select  
-✅ Real-time download progress  
-✅ Subtitle support  
-✅ Download history  
-✅ Responsive mobile design  
-✅ Resume on browser reconnect  
-✅ Automatic cleanup of old jobs
+| Variable          | Value              | Description                             |
+| ----------------- | ------------------ | --------------------------------------- |
+| `PORT`            | `8080`             | Auto-set hoti hai Railway pe            |
+| `ADMIN_TOKEN`     | `koi-bhi-secret`   | Cookies update API ko protect karta hai |
+| `YT_COOKIES_FILE` | `/app/cookies.txt` | Cookies file path (default sahi hai)    |
 
-## Known Limitations
+---
 
-- YouTube may block downloads occasionally (rate limiting)
-- Age-restricted videos need authentication
-- Very long playlists (500+) may timeout
-- Private/unavailable videos cannot be downloaded
-- This tool is for personal use only — respect YouTube's terms of service
-- Maximum 3 concurrent downloads
-- Jobs older than 30 minutes are automatically deleted
+## Step 3: Cookies Setup (ZAROORI!)
 
-## Troubleshooting
+### Cookies Export Karna:
 
-- **"Check your internet connection"**: Verify your internet connection
-- **"This video is private"**: Video is not publicly available
-- **"Age restricted"**: You need to log in to access this video
-- **Download stuck**: Try cancelling and restarting
-- **Playlist issues**: Try downloading a single video from the playlist first
+1. Chrome/Firefox me yeh extension install karo:
+   - **"Get cookies.txt LOCALLY"** (Chrome Web Store)
+   - **"cookies.txt"** (Firefox Add-ons)
 
-## Technical Stack
+2. YouTube.com pe apne Google account se login karo
 
-- **Backend**: Flask + yt-dlp + FFmpeg
-- **Frontend**: HTML5 + CSS3 + Vanilla JS
-- **Storage**: LocalStorage (history), File system (downloads)
+3. Extension icon click karo → cookies export karo
+
+4. Saved file ka content `cookies.txt` me paste karo
+
+### Cookies Railway pe Upload Karna:
+
+**Script se (easy):**
+
+```bash
+python update_cookies.py \
+  --url https://your-app.railway.app \
+  --token your-admin-token \
+  --cookies cookies.txt
+```
+
+**Manual (curl se):**
+
+```bash
+curl -X POST https://your-app.railway.app/api/cookies \
+  -H "Content-Type: application/json" \
+  -H "X-Admin-Token: your-admin-token" \
+  -d "{\"cookies\": \"$(cat cookies.txt | sed 's/\"/\\"/g')\"}"
+```
+
+---
+
+## Step 4: Health Check
+
+Deploy ke baad verify karo:
+
+```
+https://your-app.railway.app/api/health
+```
+
+Response agar sahi hai:
+
+```json
+{
+  "status": "ok",
+  "version": "2.0",
+  "cookies": "loaded",
+  "cookies_path": "/app/cookies.txt"
+}
+```
+
+Agar `"cookies": "not found"` aaye to Step 3 dobara karo.
+
+---
+
+## Cookies Kab Refresh Karni Padti Hai?
+
+| Error Message                        | Matlab                | Solution             |
+| ------------------------------------ | --------------------- | -------------------- |
+| "YouTube ne block kiya"              | Bot detection         | Cookies refresh karo |
+| "Age restricted — cookies.txt lagao" | Age-restricted video  | Cookies refresh karo |
+| "Login required"                     | Sign-in required      | Cookies refresh karo |
+| Download 403 error                   | Cookie expire ho gayi | Cookies refresh karo |
+
+**Har 2-4 hafte me cookies refresh karna recommend kiya jata hai.**
+
+---
+
+## Common Issues
+
+### ffmpeg nahi mila
+
+- Dockerfile me `ffmpeg` already included hai
+- Agar custom deployment hai to: `apt-get install ffmpeg`
+
+### 1080p+ nahi chal raha
+
+- Railway pe Node.js available nahi hota
+- `player_skip: ['js']` already set hai jo is issue ko handle karta hai
+- 720p reliably kaam karta hai; 1080p ke liye cookies zaroori hain
+
+### Downloads slow hain
+
+- Railway free tier pe bandwidth limit hai
+- Paid plan upgrade consider karo agar zyada use hai

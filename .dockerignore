@@ -1,0 +1,10 @@
+cookies.txt
+cookies_backup.txt
+*.cookies
+downloads/
+__pycache__/
+.pycache_check/
+*.pyc
+.git/
+.env
+.env.local
