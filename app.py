@@ -42,8 +42,47 @@ def resolve_js_runtimes():
 JS_RUNTIMES = resolve_js_runtimes()
 
 
+AUTH_COOKIE_NAMES = {
+    "SID",
+    "HSID",
+    "SSID",
+    "APISID",
+    "SAPISID",
+    "__Secure-1PSID",
+    "__Secure-3PSID",
+    "__Secure-1PAPISID",
+    "__Secure-3PAPISID",
+}
+
+
+def normalize_cookie_content(content):
+    return (content or '').replace('\r\n', '\n').replace('\\n', '\n').strip() + '\n'
+
+
+def cookie_auth_names_from_content(content):
+    found_names = set()
+    for line in normalize_cookie_content(content).splitlines():
+        if line.startswith('#') or not line.strip():
+            continue
+        parts = line.split('\t')
+        if len(parts) >= 7 and parts[5] in AUTH_COOKIE_NAMES:
+            found_names.add(parts[5])
+    return found_names
+
+
+def cookie_content_is_valid(content):
+    normalized = normalize_cookie_content(content)
+    if 'youtube.com' not in normalized and '.youtube.com' not in normalized:
+        return False
+
+    found_names = cookie_auth_names_from_content(normalized)
+    has_sid = 'SID' in found_names
+    has_secure_psid = '__Secure-1PSID' in found_names or '__Secure-3PSID' in found_names
+    return has_sid and has_secure_psid and len(found_names) >= 4
+
+
 def write_cookie_file(content):
-    content = (content or '').replace('\r\n', '\n').strip() + '\n'
+    content = normalize_cookie_content(content)
     cookie_dir = os.path.dirname(os.path.abspath(COOKIE_FILE))
     if cookie_dir:
         os.makedirs(cookie_dir, exist_ok=True)
@@ -63,6 +102,14 @@ def ensure_cookie_file_from_env():
         if cookies_b64:
             cookies_text = base64.b64decode(cookies_b64).decode('utf-8')
 
+        if not cookie_content_is_valid(cookies_text):
+            print(
+                "Cookie env invalid/corrupt — file overwrite skip. "
+                "Railway me YT_COOKIES hata kar YT_COOKIES_B64 use karein.",
+                flush=True,
+            )
+            return
+
         write_cookie_file(cookies_text)
     except Exception as error:
         print(f"Cookie env load failed: {error}", flush=True)
@@ -80,29 +127,14 @@ def cookie_diagnostics():
             "auth_cookie_names": [],
         }
 
-    auth_names = {
-        "SID",
-        "HSID",
-        "SSID",
-        "APISID",
-        "SAPISID",
-        "__Secure-1PSID",
-        "__Secure-3PSID",
-        "__Secure-1PAPISID",
-        "__Secure-3PAPISID",
-    }
     found_names = set()
     has_youtube_domain = False
 
     try:
         with open(COOKIE_FILE, 'r', encoding='utf-8', errors='ignore') as cookie_file:
-            for line in cookie_file:
-                if "youtube.com" in line:
-                    has_youtube_domain = True
-
-                parts = line.strip().split('\t')
-                if len(parts) >= 7 and parts[5] in auth_names:
-                    found_names.add(parts[5])
+            content = cookie_file.read()
+            has_youtube_domain = "youtube.com" in content
+            found_names = cookie_auth_names_from_content(content)
     except OSError:
         return {
             "status": "unreadable",

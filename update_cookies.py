@@ -12,6 +12,7 @@ Description:
 """
 
 import argparse
+import base64
 import sys
 import requests
 
@@ -59,6 +60,17 @@ def check_health(app_url: str):
     print(f"   Status:  {data.get('status')}")
     print(f"   Cookies: {data.get('cookies')}")
     print(f"   Path:    {data.get('cookies_path')}")
+    auth_names = data.get('cookies_auth_names') or []
+    if auth_names:
+        print(f"   Auth:    {', '.join(auth_names)}")
+
+
+def print_b64(cookies_file: str):
+    with open(cookies_file, 'r', encoding='utf-8') as cookie_file:
+        content = cookie_file.read()
+    encoded = base64.b64encode(content.encode('utf-8')).decode('ascii')
+    print("Railway Variables me YT_COOKIES_B64 ke naam se yeh value paste karo:\n")
+    print(encoded)
 
 
 if __name__ == "__main__":
@@ -67,10 +79,13 @@ if __name__ == "__main__":
     parser.add_argument("--token", default="", help="ADMIN_TOKEN env var ka value")
     parser.add_argument("--cookies", default="cookies.txt", help="Local cookies.txt path")
     parser.add_argument("--health", action="store_true", help="Sirf health check karo")
+    parser.add_argument("--print-b64", action="store_true", help="Railway YT_COOKIES_B64 value print karo")
 
     args = parser.parse_args()
 
-    if args.health:
+    if args.print_b64:
+        print_b64(args.cookies)
+    elif args.health:
         check_health(args.url)
     else:
         upload_cookies(args.url, args.token, args.cookies)
