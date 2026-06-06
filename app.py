@@ -23,19 +23,23 @@ COOKIE_FILE = os.environ.get(
 ADMIN_TOKEN = os.environ.get('ADMIN_TOKEN', '')
 
 
-def resolve_node_runtime():
+def resolve_js_runtimes():
+    runtimes = {}
+
+    configured_deno = os.environ.get('DENO_PATH', '').strip()
+    deno_path = configured_deno if configured_deno and os.path.exists(configured_deno) else shutil.which('deno')
+    if deno_path:
+        runtimes['deno'] = {'path': deno_path}
+
     configured_node = os.environ.get('NODE_PATH', '').strip()
-    if configured_node and os.path.exists(configured_node):
-        return f'node:{configured_node}'
-
-    node_path = shutil.which('node')
+    node_path = configured_node if configured_node and os.path.exists(configured_node) else shutil.which('node')
     if node_path:
-        return f'node:{node_path}'
+        runtimes['node'] = {'path': node_path}
 
-    return None
+    return runtimes
 
 
-NODE_RUNTIME = resolve_node_runtime()
+JS_RUNTIMES = resolve_js_runtimes()
 
 
 def write_cookie_file(content):
@@ -121,14 +125,18 @@ def cookie_opts():
 
 def youtube_extractor_args(skip_manifests=False):
     youtube_args = {
-        'player_client': ['web', 'android', 'ios'],  # ← fallback chain add karo
+        'player_client': ['web', 'mweb'],
     }
-    if NODE_RUNTIME:
-        youtube_args['js_runtimes'] = [NODE_RUNTIME]
     if skip_manifests:
         youtube_args['skip'] = ['hls', 'dash']
 
     return {'youtube': youtube_args}
+
+
+def apply_yt_dlp_runtime(opts):
+    if JS_RUNTIMES:
+        opts['js_runtimes'] = JS_RUNTIMES
+    return opts
 
 
 ensure_cookie_file_from_env()
@@ -139,7 +147,6 @@ def make_info_opts():
         'quiet': True,
         'no_warnings': True,
         'skip_download': True,
-        'simulate': True,
     }
 
     extractor_args = youtube_extractor_args(skip_manifests=True)
@@ -147,6 +154,7 @@ def make_info_opts():
         opts['extractor_args'] = extractor_args
 
     opts.update(cookie_opts())
+    apply_yt_dlp_runtime(opts)
     return opts
 
 if not os.path.exists('downloads'):
@@ -188,7 +196,7 @@ def health():
         "cookies_path": COOKIE_FILE,
         "cookies_has_youtube_domain": cookie_status["has_youtube_domain"],
         "cookies_auth_names": cookie_status["auth_cookie_names"],
-        "node_runtime": "loaded" if NODE_RUNTIME else "not found",
+        "js_runtimes": sorted(JS_RUNTIMES.keys()) or ["not found"],
     })
 
 
@@ -386,6 +394,10 @@ def yt_dlp_error_message(error):
         if cookies_available():
             return "YouTube ne cookies accept nahi ki. Fresh logged-in YouTube cookies export karke dobara upload karein."
         return "YouTube login cookies required hain. Railway par cookies upload karein."
+    if "n challenge solving failed" in message or "no video formats found" in message:
+        return "YouTube formats fetch nahi ho sake. App redeploy karein aur phir try karein."
+    if "requested format is not available" in message:
+        return "Is video ke formats abhi available nahi hain. Doosri video try karein."
     if "private" in message:
         return "Yeh video private hai"
     if "age" in message or "sign in to confirm your age" in message:
@@ -522,6 +534,7 @@ def build_ydl_opts(job_id, quality, fmt, output_path):
         opts['extractor_args'] = extractor_args
 
     opts.update(cookie_opts())
+    apply_yt_dlp_runtime(opts)
 
     if is_audio_only:
         opts.update({
@@ -594,6 +607,7 @@ def get_info():
             if extractor_args:
                 flat_opts['extractor_args'] = extractor_args
             flat_opts.update(cookie_opts())
+            apply_yt_dlp_runtime(flat_opts)
 
             with yt_dlp.YoutubeDL(flat_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
